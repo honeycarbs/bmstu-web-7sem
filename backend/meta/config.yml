@@ -1,0 +1,7 @@
+---
+
+isDebug: true
+listen:
+  type: port
+  bind_ip: localhost
+  port: 8080
