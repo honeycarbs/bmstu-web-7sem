@@ -1,0 +1,87 @@
+package handler
+
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"neatly/internal/mapper"
+	"neatly/internal/service"
+	"neatly/pkg/logging"
+)
+
+const (
+	authURLGroup  = "/auth"
+	registerURL   = "/register"
+	loginURL      = "/login"
+	apiURLGroup   = "/api"
+	notesURLGroup = "/notes"
+	tagsURLGroup  = "/tags"
+	tagID         = "tag_id"
+	searchURL     = "/search"
+	versionAPI    = "1"
+)
+
+type Handler struct {
+	logger     logging.Logger
+	services   *service.Service
+	noteMapper *mapper.NoteMapper
+	userMapper *mapper.UserMapper
+	tagMapper  *mapper.TagMapper
+}
+
+func New(services *service.Service, logger logging.Logger) *Handler {
+	return &Handler{
+		services:   services,
+		logger:     logger,
+		noteMapper: mapper.NewNoteMapper(logger),
+		userMapper: mapper.NewUserMapper(logger),
+		tagMapper:  mapper.NewTagMapper(logger),
+	}
+}
+
+func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
+	if *idDebug == false {
+		h.logger.Info("Setting gin to release mode")
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	h.logger.Info("Create new gin router")
+	router := gin.New()
+
+	auth := router.Group(authURLGroup)
+	{
+		auth.POST(registerURL, h.register)
+		auth.POST(loginURL, h.login)
+	}
+
+	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI), h.userIdentity)
+	{
+		search := api.Group(searchURL)
+		{
+			search.GET("/", h.search)
+		}
+
+		notes := api.Group(notesURLGroup)
+		{
+			notes.GET("/", h.getAllNotes)
+			notes.POST("/", h.createNote)
+			notes.GET("/:id", h.getOneNote)
+			notes.PATCH("/:id", h.updateNote)
+			notes.DELETE("/:id", h.deleteNote)
+
+			tagsOnNote := notes.Group(fmt.Sprintf(":id%s", tagsURLGroup))
+			{
+				tagsOnNote.GET("/", h.getAllTagsOnNote)
+				tagsOnNote.POST("/", h.createTag) // POST /api/notes/:id/tags/
+			}
+		}
+		tags := api.Group(tagsURLGroup)
+		{
+			tags.GET("/", h.getAllTags)
+			tags.GET("/:id", h.getOneTag)
+			tags.PATCH("/:id", h.updateTag)
+			tags.DELETE("/:id", h.deleteTag)
+		}
+	}
+
+	return router
+}
