@@ -29,6 +29,12 @@ func (m *mapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
 	return n
 }
 
+func (m *mapper) MapGetAllNotesDTO(ns []note.Note) note.GetAllNotesDTO {
+	return note.GetAllNotesDTO{
+		Notes: ns,
+	}
+}
+
 func (m *mapper) MapUpdateNoteDTO(dto note.UpdateNoteDTO) note.Note {
 	if dto.Color == "" {
 		dto.Color = note.DEFAULT_NOTE_COLOR

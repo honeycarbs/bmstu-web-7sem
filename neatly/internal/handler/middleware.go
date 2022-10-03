@@ -14,20 +14,20 @@ const (
 	userCtx             = "user_id"
 )
 
-func (h *Handler) userIdentity(ctx *gin.Context) {
+func (h *Handler) authenticate(ctx *gin.Context) {
 	header := ctx.GetHeader(authorizationHeader)
 	if header == "" {
-		e.NewErrorResponse(ctx, http.StatusUnauthorized, "unauthorized")
+		e.NewErrorResponse(ctx, http.StatusUnauthorized, errors.New("unauthorized"))
 		return
 	}
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
-		e.NewErrorResponse(ctx, http.StatusUnauthorized, "malformed token")
+		e.NewErrorResponse(ctx, http.StatusUnauthorized, errors.New("malformed token"))
 		return
 	}
 	userID, err := jwt.GetIdFromToken(headerParts[1])
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusUnauthorized, err.Error())
+		e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
 	}
 
 	ctx.Set(userCtx, userID)
@@ -36,14 +36,12 @@ func (h *Handler) userIdentity(ctx *gin.Context) {
 func (h *Handler) getUserID(ctx *gin.Context) (int, error) {
 	id, ok := ctx.Get(userCtx)
 	if !ok {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, "error umm")
-		return 0, errors.New("error umm")
+		return 0, errors.New("can't get authorization parameters")
 	}
 
 	idNum, ok := id.(int)
 	if !ok {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, "error umm")
-		return 0, errors.New("error umm")
+		return 0, errors.New("can't get authorization params")
 	}
 
 	return idNum, nil

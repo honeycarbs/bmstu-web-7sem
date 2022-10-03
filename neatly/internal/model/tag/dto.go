@@ -9,3 +9,7 @@ type UpdateTagDTO struct {
 	Name  string `json:"name" db:"name"`
 	Color string `json:"color" db:"color"`
 }
+
+type GetAllTagsDTO struct {
+	Tags []Tag `json:"tags"`
+}

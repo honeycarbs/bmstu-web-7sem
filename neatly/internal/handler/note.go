@@ -14,6 +14,7 @@ import (
 func (h *Handler) createNote(ctx *gin.Context) {
 	id, err := h.getUserID(ctx)
 	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		h.logger.Info(err)
 		return
 	}
@@ -21,7 +22,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	var dto note.CreateNoteDTO
 	if err := ctx.BindJSON(&dto); err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -29,7 +30,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	err = h.services.Note.Create(id, &n)
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -40,34 +41,37 @@ func (h *Handler) createNote(ctx *gin.Context) {
 func (h *Handler) getAllNotes(ctx *gin.Context) {
 	id, err := h.getUserID(ctx)
 	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	notes, err := h.services.Note.GetAll(id)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
+	ndto := h.mappers.Note.MapGetAllNotesDTO(notes)
 
-	ctx.JSON(http.StatusOK, notes)
+	ctx.JSON(http.StatusOK, ndto)
 }
 
 func (h *Handler) getOneNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	noteID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	n, err := h.services.Note.GetOne(userID, noteID)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -77,20 +81,21 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 func (h *Handler) updateNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	noteID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	bodyBytes, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	h.logger.Debug("unmarshal body bytes")
@@ -103,14 +108,13 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	dto.ID = noteID
 	if err := json.Unmarshal(bodyBytes, &dto); err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	// TODO: check for updating tags
 	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -122,7 +126,7 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -132,19 +136,20 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 func (h *Handler) deleteNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	noteID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	err = h.services.Note.Delete(userID, noteID)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 

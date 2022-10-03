@@ -1,11 +1,11 @@
-package user
+package auth
 
 import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
+type Account struct {
 	ID           int    `json:"-" db:"id"`
 	Name         string `json:"name" binding:"required"`
 	Username     string `json:"username" binding:"required"`
@@ -14,7 +14,7 @@ type User struct {
 	PasswordHash string `json:"password" binding:"required" db:"password_hash"`
 }
 
-func (u *User) CheckPassword(password string) error {
+func (u *Account) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	if err != nil {
 		return fmt.Errorf("password does not match")

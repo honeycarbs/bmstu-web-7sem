@@ -29,9 +29,10 @@ func (h *Handler) search(ctx *gin.Context) {
 	ns, err := h.services.Note.FindByTags(userID, values)
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
+	dto := h.mappers.Note.MapGetAllNotesDTO(ns)
 
-	ctx.JSON(http.StatusOK, ns)
+	ctx.JSON(http.StatusOK, dto)
 }

@@ -1,7 +1,7 @@
-package user
+package auth
 
 import (
-	"neatly/internal/model/user"
+	"neatly/internal/model/auth"
 	"neatly/pkg/logging"
 )
 
@@ -13,15 +13,15 @@ func New(logger logging.Logger) *mapper {
 	return &mapper{logger: logger}
 }
 
-func (m *mapper) MapUserRegisterDTO(dto user.RegisterUserDTO) (user.User, error) {
-	phash, err := user.GeneratePasswordHash(dto.Password)
+func (m *mapper) MapRegisterAccountDTO(dto auth.RegisterAccountDTO) (auth.Account, error) {
+	phash, err := auth.GeneratePasswordHash(dto.Password)
 	if err != nil {
 		m.logger.Info(err)
-		return user.User{}, err
+		return auth.Account{}, err
 	}
 
-	m.logger.Info("User password hashed")
-	return user.User{
+	m.logger.Info("Account password hashed")
+	return auth.Account{
 		ID:           0,
 		Name:         dto.Name,
 		Username:     dto.Username,
@@ -31,13 +31,19 @@ func (m *mapper) MapUserRegisterDTO(dto user.RegisterUserDTO) (user.User, error)
 	}, nil
 }
 
-func (m *mapper) MapUserLogInUserDTO(dto user.LoginUserDTO) user.User {
-	return user.User{
+func (m *mapper) MapLogInAccountDTO(dto auth.LoginAccountDTO) auth.Account {
+	return auth.Account{
 		ID:           0,
 		Name:         "",
 		Username:     dto.Username,
 		Email:        "",
 		Password:     dto.Password,
 		PasswordHash: "",
+	}
+}
+
+func (m *mapper) MapJwtDTO(token string) auth.JwtDTO {
+	return auth.JwtDTO{
+		Token: token,
 	}
 }

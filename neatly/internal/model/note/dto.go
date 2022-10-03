@@ -1,6 +1,8 @@
 package note
 
-import "neatly/internal/model/tag"
+import (
+	"neatly/internal/model/tag"
+)
 
 type CreateNoteDTO struct {
 	Header string `json:"header" binding:"required"`
@@ -14,4 +16,8 @@ type UpdateNoteDTO struct {
 	Body   string    `json:"body"`
 	Color  string    `json:"color"`
 	Tags   []tag.Tag `json:"tags"`
+}
+
+type GetAllNotesDTO struct {
+	Notes []Note `json:"notes"`
 }

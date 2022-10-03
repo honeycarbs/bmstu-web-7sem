@@ -21,7 +21,7 @@ func NewService(tr repository.Tag, nr repository.Note, l logging.Logger) *Servic
 func (s *Service) Create(userID, noteID int, t *tag.Tag) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to user")
+		return errors.New("note does not exists or does not belong to auth")
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)

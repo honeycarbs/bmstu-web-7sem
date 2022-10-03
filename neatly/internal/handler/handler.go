@@ -43,36 +43,36 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 	h.logger.Info("Create new gin router")
 	router := gin.New()
 
-	auth := router.Group(authURLGroup)
+	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI))
 	{
-		auth.POST(registerURL, h.register)
-		auth.POST(loginURL, h.login)
-	}
-
-	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI), h.userIdentity) // TODO: refactor
-	{
-		search := api.Group(searchURL)
+		auth := api.Group(authURLGroup)
 		{
-			search.GET("/", h.search)
+			auth.POST(registerURL, h.register)
+			auth.POST(loginURL, h.login)
 		}
 
-		notes := api.Group(notesURLGroup)
+		search := api.Group(searchURL, h.authenticate)
 		{
-			notes.GET("/", h.getAllNotes)      // /api/v1/notes
-			notes.POST("/", h.createNote)      // /api/v1/notes
+			search.GET("", h.search)
+		}
+
+		notes := api.Group(notesURLGroup, h.authenticate)
+		{
+			notes.GET("", h.getAllNotes)       // /api/v1/notes
+			notes.POST("", h.createNote)       // /api/v1/notes
 			notes.GET("/:id", h.getOneNote)    // /api/v1/notes/:id
 			notes.PATCH("/:id", h.updateNote)  // /api/v1/notes/:id
 			notes.DELETE("/:id", h.deleteNote) // /api/v1/notes/:id
 
 			tagsOnNote := notes.Group(fmt.Sprintf(":id%s", tagsURLGroup))
 			{
-				tagsOnNote.GET("/", h.getAllTagsOnNote) // /api/notes/:id/tags/
-				tagsOnNote.POST("/", h.createTag)       // /api/notes/:id/tags/
+				tagsOnNote.GET("", h.getAllTagsOnNote) // /api/notes/:id/tags/
+				tagsOnNote.POST("", h.createTag)       // /api/notes/:id/tags/
 			}
 		}
-		tags := api.Group(tagsURLGroup)
+		tags := api.Group(tagsURLGroup, h.authenticate)
 		{
-			tags.GET("/", h.getAllTags)
+			tags.GET("", h.getAllTags)
 			tags.GET("/:id", h.getOneTag)
 			tags.PATCH("/:id", h.updateTag)
 			tags.DELETE("/:id", h.deleteTag)

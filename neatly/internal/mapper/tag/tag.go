@@ -28,3 +28,9 @@ func (m *mapper) MapUpdateTagDTO(dto tag.UpdateTagDTO) tag.Tag {
 		Color: dto.Color,
 	}
 }
+
+func (m *mapper) MapGetAllTagsDTO(tags []tag.Tag) tag.GetAllTagsDTO {
+	return tag.GetAllTagsDTO{
+		Tags: tags,
+	}
+}

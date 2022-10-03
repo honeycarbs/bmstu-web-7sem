@@ -15,15 +15,20 @@ type DB struct {
 	SSLMode  string `yaml:"ssl_mode"`
 }
 
+type Listen struct {
+	Port   string `yaml:"port" env-default:"8080"`
+	BindIP string `yaml:"bind_ip" env-default:"localhost"`
+}
+
 type JWT struct {
 	Secret string `yaml:"secret"`
 }
 
 type Config struct {
-	IsDebug *bool  `yaml:"is_debug"`
-	Port    string `yaml:"port" env-default:"8080"`
-	DB      DB     `yaml:"db"`
-	JWT     JWT    `yaml:"jwt"`
+	IsDebug *bool `yaml:"is_debug"`
+	DB      DB    `yaml:"db"`
+	Listen  Listen
+	JWT     JWT `yaml:"jwt"`
 }
 
 var instance *Config

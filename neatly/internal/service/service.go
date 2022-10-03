@@ -1,19 +1,19 @@
 package service
 
 import (
+	"neatly/internal/model/auth"
 	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
-	"neatly/internal/model/user"
 	"neatly/internal/repository"
-	"neatly/internal/service/auth"
+	authService "neatly/internal/service/auth"
 	noteService "neatly/internal/service/note"
 	tagService "neatly/internal/service/tag"
 	"neatly/pkg/logging"
 )
 
 type Authorisation interface {
-	CreateUser(u *user.User) error
-	GenerateJWT(u *user.User) (string, error)
+	CreateUser(u *auth.Account) error
+	GenerateJWT(u *auth.Account) (string, error)
 }
 
 type Note interface {
@@ -42,7 +42,7 @@ type Service struct {
 
 func New(repo *repository.Repository, logger logging.Logger) *Service {
 	return &Service{
-		Authorisation: auth.NewService(repo.Authorisation),
+		Authorisation: authService.NewService(repo.Authorisation),
 		Note:          noteService.NewService(repo.Note, repo.Tag, logger),
 		Tag:           tagService.NewService(repo.Tag, repo.Note, logger),
 	}

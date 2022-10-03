@@ -2,16 +2,16 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
+	"neatly/internal/model/auth"
 	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
-	"neatly/internal/model/user"
 	"neatly/pkg/logging"
 	"neatly/pkg/postgres"
 )
 
 type Authorisation interface {
-	CreateUser(u *user.User) error
-	GetUser(u *user.User) error
+	CreateUser(u *auth.Account) error
+	GetUser(u *auth.Account) error
 }
 
 type Note interface {

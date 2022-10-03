@@ -19,7 +19,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	noteID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 
 	if err := ctx.BindJSON(&dto); err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 	noteID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -65,11 +65,13 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, tags)
+	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
+
+	ctx.JSON(http.StatusCreated, dto)
 }
 
 func (h *Handler) getAllTags(ctx *gin.Context) {
@@ -83,11 +85,13 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, tags)
+	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
+
+	ctx.JSON(http.StatusCreated, dto)
 }
 
 func (h *Handler) getOneTag(ctx *gin.Context) {
@@ -100,7 +104,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 	tagID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -108,7 +112,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -124,7 +128,7 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	tagID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -133,7 +137,7 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	)
 	if err := ctx.BindJSON(&dto); err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -141,7 +145,7 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	err = h.services.Tag.Update(userID, tagID, t)
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -158,7 +162,7 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 	tagID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -166,7 +170,7 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 

@@ -1,8 +1,15 @@
 package neatly
 
 import (
-	"context"
+	"errors"
+	"fmt"
+	"neatly/internal/session"
+	"neatly/pkg/logging"
+	"neatly/pkg/shutdown"
+	"net"
 	"net/http"
+	"os"
+	"syscall"
 	"time"
 )
 
@@ -10,18 +17,34 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func (s *Server) Run(port string, handler http.Handler) error {
+func Run(cfg *session.Config, handler http.Handler, logger logging.Logger) {
+	var (
+		s        Server
+		listener net.Listener
+	)
+
 	s.httpServer = &http.Server{
-		Addr:           ":" + port,
-		Handler:        handler,
-		MaxHeaderBytes: 1 << 20,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		Handler:      handler,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
 	}
 
-	return s.httpServer.ListenAndServe()
-}
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Listen.BindIP, cfg.Listen.Port))
+	if err != nil {
+		logger.Fatal(err)
+	}
 
-func (s *Server) ShutdownGraceful(ctx context.Context) error {
-	return s.httpServer.Shutdown(ctx)
+	go shutdown.Graceful([]os.Signal{syscall.SIGABRT, syscall.SIGQUIT, syscall.SIGHUP, os.Interrupt, syscall.SIGTERM},
+		s.httpServer)
+
+	logger.Println("application initialized and started")
+
+	if err := s.httpServer.Serve(listener); err != nil {
+		switch {
+		case errors.Is(err, http.ErrServerClosed):
+			logger.Warn("server shutdown")
+		default:
+			logger.Fatal(err)
+		}
+	}
 }

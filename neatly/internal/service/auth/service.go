@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"neatly/internal/model/user"
+	"neatly/internal/model/auth"
 	"neatly/internal/repository"
 	"neatly/pkg/jwt"
 )
@@ -14,7 +14,7 @@ func NewService(repository repository.Authorisation) *Service {
 	return &Service{repository: repository}
 }
 
-func (s *Service) CreateUser(u *user.User) error {
+func (s *Service) CreateUser(u *auth.Account) error {
 	err := s.repository.CreateUser(u)
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func (s *Service) CreateUser(u *user.User) error {
 	return nil
 }
 
-func (s *Service) GenerateJWT(u *user.User) (string, error) {
+func (s *Service) GenerateJWT(u *auth.Account) (string, error) {
 	err := s.repository.GetUser(u)
 	if err != nil {
 		return "", err

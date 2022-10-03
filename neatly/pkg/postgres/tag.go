@@ -43,7 +43,7 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 		return err
 	}
 
-	r.logger.Infof("Connecting tag with id %v and user with id with id %v", t.ID, userID)
+	r.logger.Infof("Connecting tag with id %v and auth with id with id %v", t.ID, userID)
 	userTagQuery := fmt.Sprintf(
 		`INSERT INTO %s
     			(user_id, tag_id)
