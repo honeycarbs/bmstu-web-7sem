@@ -1,19 +1,19 @@
-package mapper
+package note
 
 import (
 	"neatly/internal/model/note"
 	"neatly/pkg/logging"
 )
 
-type NoteMapper struct {
+type mapper struct {
 	logger logging.Logger
 }
 
-func NewNoteMapper(logger logging.Logger) *NoteMapper {
-	return &NoteMapper{logger: logger}
+func New(logger logging.Logger) *mapper {
+	return &mapper{logger: logger}
 }
 
-func (m *NoteMapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
+func (m *mapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
 	n := note.Note{
 		ID:        0,
 		Header:    dto.Header,
@@ -29,7 +29,7 @@ func (m *NoteMapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
 	return n
 }
 
-func (m *NoteMapper) MapUpdateNoteDTO(dto note.UpdateNoteDTO) note.Note {
+func (m *mapper) MapUpdateNoteDTO(dto note.UpdateNoteDTO) note.Note {
 	if dto.Color == "" {
 		dto.Color = note.DEFAULT_NOTE_COLOR
 	}

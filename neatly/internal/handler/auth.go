@@ -19,7 +19,7 @@ func (h *Handler) register(ctx *gin.Context) {
 		return
 	}
 
-	u, err := h.userMapper.MapUserRegisterDTO(dto)
+	u, err := h.mappers.User.MapUserRegisterDTO(dto)
 	if err != nil {
 		h.logger.Error(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err.Error())
@@ -46,7 +46,7 @@ func (h *Handler) login(ctx *gin.Context) {
 		return
 	}
 
-	u := h.userMapper.MapUserLogInUserDTO(dto)
+	u := h.mappers.User.MapUserLogInUserDTO(dto)
 
 	token, err := h.services.Authorisation.GenerateJWT(&u)
 	if err != nil {

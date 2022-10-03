@@ -21,20 +21,16 @@ const (
 )
 
 type Handler struct {
-	logger     logging.Logger
-	services   *service.Service
-	noteMapper *mapper.NoteMapper
-	userMapper *mapper.UserMapper
-	tagMapper  *mapper.TagMapper
+	logger   logging.Logger
+	services *service.Service
+	mappers  *mapper.Mapper
 }
 
-func New(services *service.Service, logger logging.Logger) *Handler {
+func New(services *service.Service, mappers *mapper.Mapper, logger logging.Logger) *Handler {
 	return &Handler{
-		services:   services,
-		logger:     logger,
-		noteMapper: mapper.NewNoteMapper(logger),
-		userMapper: mapper.NewUserMapper(logger),
-		tagMapper:  mapper.NewTagMapper(logger),
+		services: services,
+		logger:   logger,
+		mappers:  mappers,
 	}
 }
 
@@ -53,7 +49,7 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 		auth.POST(loginURL, h.login)
 	}
 
-	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI), h.userIdentity)
+	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI), h.userIdentity) // TODO: refactor
 	{
 		search := api.Group(searchURL)
 		{
@@ -62,16 +58,16 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 
 		notes := api.Group(notesURLGroup)
 		{
-			notes.GET("/", h.getAllNotes)
-			notes.POST("/", h.createNote)
-			notes.GET("/:id", h.getOneNote)
-			notes.PATCH("/:id", h.updateNote)
-			notes.DELETE("/:id", h.deleteNote)
+			notes.GET("/", h.getAllNotes)      // /api/v1/notes
+			notes.POST("/", h.createNote)      // /api/v1/notes
+			notes.GET("/:id", h.getOneNote)    // /api/v1/notes/:id
+			notes.PATCH("/:id", h.updateNote)  // /api/v1/notes/:id
+			notes.DELETE("/:id", h.deleteNote) // /api/v1/notes/:id
 
 			tagsOnNote := notes.Group(fmt.Sprintf(":id%s", tagsURLGroup))
 			{
-				tagsOnNote.GET("/", h.getAllTagsOnNote)
-				tagsOnNote.POST("/", h.createTag) // POST /api/notes/:id/tags/
+				tagsOnNote.GET("/", h.getAllTagsOnNote) // /api/notes/:id/tags/
+				tagsOnNote.POST("/", h.createTag)       // /api/notes/:id/tags/
 			}
 		}
 		tags := api.Group(tagsURLGroup)

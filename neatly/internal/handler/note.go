@@ -25,7 +25,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 		return
 	}
 
-	n := h.noteMapper.MapCreateNoteDTO(dto)
+	n := h.mappers.Note.MapCreateNoteDTO(dto)
 	err = h.services.Note.Create(id, &n)
 	if err != nil {
 		h.logger.Info(err)
@@ -117,7 +117,7 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	_, needBodyUpdate = data["body"]
 	h.logger.Infof("Need body update: %v", needBodyUpdate)
 
-	n := h.noteMapper.MapUpdateNoteDTO(dto)
+	n := h.mappers.Note.MapUpdateNoteDTO(dto)
 	err = h.services.Note.Update(userID, n, needBodyUpdate)
 
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"neatly"
 	"neatly/internal/handler"
+	"neatly/internal/mapper"
 	"neatly/internal/repository"
 	"neatly/internal/service"
 	"neatly/internal/session"
@@ -32,8 +33,11 @@ func main() {
 	logger.Info("initializing services")
 	services := service.New(repos, logger)
 
+	logger.Info("initializing mappers")
+	mappers := mapper.NewMapper(logger)
+
 	logger.Info("initializing handler")
-	handlers := handler.New(services, logger)
+	handlers := handler.New(services, mappers, logger)
 
 	srv := new(neatly.Server)
 	go func() {

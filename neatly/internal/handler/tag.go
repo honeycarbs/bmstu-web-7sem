@@ -34,7 +34,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 		return
 	}
 
-	t = h.tagMapper.MapCreateTagDTO(dto)
+	t = h.mappers.Tag.MapCreateTagDTO(dto)
 	err = h.services.Tag.Create(userID, noteID, &t)
 
 	if err != nil {
@@ -137,7 +137,7 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 		return
 	}
 
-	t := h.tagMapper.MapUpdateTagDTO(dto)
+	t := h.mappers.Tag.MapUpdateTagDTO(dto)
 	err = h.services.Tag.Update(userID, tagID, t)
 	if err != nil {
 		h.logger.Info(err)

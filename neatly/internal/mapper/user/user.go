@@ -1,19 +1,19 @@
-package mapper
+package user
 
 import (
 	"neatly/internal/model/user"
 	"neatly/pkg/logging"
 )
 
-type UserMapper struct {
+type mapper struct {
 	logger logging.Logger
 }
 
-func NewUserMapper(logger logging.Logger) *UserMapper {
-	return &UserMapper{logger: logger}
+func New(logger logging.Logger) *mapper {
+	return &mapper{logger: logger}
 }
 
-func (m *UserMapper) MapUserRegisterDTO(dto user.RegisterUserDTO) (user.User, error) {
+func (m *mapper) MapUserRegisterDTO(dto user.RegisterUserDTO) (user.User, error) {
 	phash, err := user.GeneratePasswordHash(dto.Password)
 	if err != nil {
 		m.logger.Info(err)
@@ -31,7 +31,7 @@ func (m *UserMapper) MapUserRegisterDTO(dto user.RegisterUserDTO) (user.User, er
 	}, nil
 }
 
-func (m *UserMapper) MapUserLogInUserDTO(dto user.LoginUserDTO) user.User {
+func (m *mapper) MapUserLogInUserDTO(dto user.LoginUserDTO) user.User {
 	return user.User{
 		ID:           0,
 		Name:         "",
