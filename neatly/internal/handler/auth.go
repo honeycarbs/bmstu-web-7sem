@@ -7,6 +7,17 @@ import (
 	"net/http"
 )
 
+// @Summary Register
+// @Tags register
+// @Description create account
+// @ID create-account
+// @Accept  json
+// @Produce  json
+// @Param dto body auth.RegisterAccountDTO true "account info"
+// @Success 201
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/auth/register [post]
 func (h *Handler) register(ctx *gin.Context) {
 	var (
 		err error
@@ -33,9 +44,20 @@ func (h *Handler) register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, u)
+	ctx.Writer.WriteHeader(http.StatusCreated)
 }
 
+// @Summary Login
+// @Tags auth
+// @Description login
+// @ID login
+// @Accept  json
+// @Produce  json
+// @Param dto body auth.LoginAccountDTO true "credentials"
+// @Success 200 {object} auth.JwtDTO
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/auth/login [post]
 func (h *Handler) login(ctx *gin.Context) {
 	var dto auth.LoginAccountDTO
 

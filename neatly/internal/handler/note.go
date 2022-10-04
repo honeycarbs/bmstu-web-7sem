@@ -11,8 +11,20 @@ import (
 	"strconv"
 )
 
+// @Summary Create note
+// @Security ApiKeyAuth
+// @Tags notes
+// @Description create note
+// @Accept  json
+// @Produce  json
+// @Param dto body note.CreateNoteDTO true "note content"
+// @Success 201 {string} string 1
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/notes [post]
 func (h *Handler) createNote(ctx *gin.Context) {
-	id, err := h.getUserID(ctx)
+	userID, err := h.getUserID(ctx)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		h.logger.Info(err)
@@ -27,7 +39,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	}
 
 	n := h.mappers.Note.MapCreateNoteDTO(dto)
-	err = h.services.Note.Create(id, &n)
+	err = h.services.Note.Create(userID, &n)
 	if err != nil {
 		h.logger.Info(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
@@ -38,14 +50,25 @@ func (h *Handler) createNote(ctx *gin.Context) {
 		"%s%s/%v", apiURLGroup, notesURLGroup, n.ID))
 }
 
+// @Summary Get all notes from user
+// @Security ApiKeyAuth
+// @Tags notes
+// @Description create note
+// @Accept  json
+// @Produce  json
+// @Success 201 {string} string 1
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router  /api/v1/notes [get]
 func (h *Handler) getAllNotes(ctx *gin.Context) {
-	id, err := h.getUserID(ctx)
+	userID, err := h.getUserID(ctx)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	notes, err := h.services.Note.GetAll(id)
+	notes, err := h.services.Note.GetAll(userID)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
@@ -55,6 +78,18 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, ndto)
 }
 
+// @Summary Get Note By Id
+// @Security ApiKeyAuth
+// @Tags notes
+// @Description get note by id
+// @ID get-note-by-id
+// @Accept  json
+// @Produce json
+// @Param   id  path  string  true  "id"
+// @Success 200 {object} note.Note
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/notes/{id} [get]
 func (h *Handler) getOneNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -78,6 +113,19 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, n)
 }
 
+// @Summary Update Note
+// @Security ApiKeyAuth
+// @Tags notes
+// @Description update note
+// @ID update-note
+// @Accept  json
+// @Produce json
+// @Param   id   path  string  true  "id"
+// @Param dto body note.UpdateNoteDTO true "note content"
+// @Success 204
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/notes/{id} [patch]
 func (h *Handler) updateNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -133,6 +181,18 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	ctx.Writer.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Delete Note
+// @Security ApiKeyAuth
+// @Tags notes
+// @Description delete note
+// @ID delete-note
+// @Accept  json
+// @Produce json
+// @Param   id   path string  true  "id"
+// @Success 200 {integer} integer 1
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/notes/{id} [delete]
 func (h *Handler) deleteNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {

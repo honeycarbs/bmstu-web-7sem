@@ -3,9 +3,13 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "neatly/docs"
 	"neatly/internal/mapper"
 	"neatly/internal/service"
 	"neatly/pkg/logging"
+
+	"github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -42,6 +46,8 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 
 	h.logger.Info("Create new gin router")
 	router := gin.New()
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI))
 	{

@@ -12,6 +12,17 @@ import (
 	"neatly/pkg/postgres"
 )
 
+// @title Neat.ly API
+// @version 1.0
+// @description API Server for notes-taking applications
+// @termsOfService  http://swagger.io/terms/
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	logging.Init()
 	logger := logging.GetLogger()

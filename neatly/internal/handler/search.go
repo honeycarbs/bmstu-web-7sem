@@ -12,6 +12,18 @@ const (
 	headerSearchKey = "header"
 )
 
+// @Summary Search Note
+// @Security ApiKeyAuth
+// @Tags search
+// @Description search note
+// @ID search-note
+// @Accept  json
+// @Produce json
+// @Param   tag query  string  false  "notes search by tag"
+// @Success 200 {object} note.GetAllNotesDTO
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/search [get]
 func (h *Handler) search(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {

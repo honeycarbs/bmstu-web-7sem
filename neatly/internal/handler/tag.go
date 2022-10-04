@@ -9,6 +9,19 @@ import (
 	"strconv"
 )
 
+// @Summary Create tag
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description create tag
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Param dto body tag.CreateTagDTO true "tag info"
+// @Success 201 {string} string 1
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/notes/{id}/tags [post]
 func (h *Handler) createTag(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -47,6 +60,18 @@ func (h *Handler) createTag(ctx *gin.Context) {
 		"%s%s/%v", apiURLGroup, tagsURLGroup, t.ID))
 }
 
+// @Summary Get all tags on one note
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description get tags for note
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Success 200 {object} tag.GetAllTagsDTO
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/notes/{id}/tags [get]
 func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -74,6 +99,17 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, dto)
 }
 
+// @Summary Get all tags
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description get tags from user
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} tag.GetAllTagsDTO
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/tags [get]
 func (h *Handler) getAllTags(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -94,6 +130,18 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, dto)
 }
 
+// @Summary Get one tag by ID
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description get one tag by ID
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Success 200 {object} tag.Tag
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/tags/{id} [get]
 func (h *Handler) getOneTag(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -119,6 +167,19 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, tag)
 }
 
+// @Summary Update tag by ID
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description update one tag by ID
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Param dto body tag.UpdateTagDTO true "tag info"
+// @Success 204
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/tags/{id} [patch]
 func (h *Handler) updateTag(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -152,6 +213,18 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	ctx.Writer.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Delete one tag by ID
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description delete one tag by ID
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Success 200 {integer} integer 1
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/tags/{id} [delete]
 func (h *Handler) deleteTag(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {

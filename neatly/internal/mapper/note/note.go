@@ -45,7 +45,6 @@ func (m *mapper) MapUpdateNoteDTO(dto note.UpdateNoteDTO) note.Note {
 		Header:    dto.Header,
 		Body:      dto.Body,
 		ShortBody: "",
-		Tags:      dto.Tags,
 		Color:     dto.Color,
 	}
 
