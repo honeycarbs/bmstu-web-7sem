@@ -1,6 +1,9 @@
 package note
 
-import "neatly/internal/model/tag"
+import (
+	"neatly/internal/model/tag"
+	"strings"
+)
 
 const (
 	DEFAULT_NOTE_COLOR = "CFD2CF"
@@ -36,7 +39,7 @@ func (n *Note) HasEveryTag(tagNames []string) bool {
 
 func (n *Note) hasSpecificTag(tagName string) bool {
 	for _, t := range n.Tags {
-		if t.Name == tagName {
+		if strings.Contains(strings.ToLower(t.Name), strings.ToLower(tagName)) {
 			return true
 		}
 	}

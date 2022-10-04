@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	tagSearchKey    = "tag"
-	headerSearchKey = "header"
+	tagSearchKey = "tag"
 )
 
 // @Summary Search Note
@@ -23,7 +22,7 @@ const (
 // @Success 200 {object} note.GetAllNotesDTO
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
-// @Router /api/v1/search [get]
+// @Router /api/v1/notes/search [get]
 func (h *Handler) search(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -32,7 +31,7 @@ func (h *Handler) search(ctx *gin.Context) {
 	}
 
 	keys := ctx.Request.URL.Query()
-	values := keys["tag"]
+	values := keys[tagSearchKey]
 	if values == nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Sprint("malformed query"))
 	}

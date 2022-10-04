@@ -57,13 +57,13 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 			auth.POST(loginURL, h.login)
 		}
 
-		search := api.Group(searchURL, h.authenticate)
-		{
-			search.GET("", h.search)
-		}
-
 		notes := api.Group(notesURLGroup, h.authenticate)
 		{
+			search := notes.Group(searchURL)
+			{
+				search.GET("", h.search)
+			}
+
 			notes.GET("", h.getAllNotes)       // /api/v1/notes
 			notes.POST("", h.createNote)       // /api/v1/notes
 			notes.GET("/:id", h.getOneNote)    // /api/v1/notes/:id

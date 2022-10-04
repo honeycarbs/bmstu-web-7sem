@@ -437,7 +437,7 @@ paths:
       summary: Create tag
       tags:
       - tags
-  /api/v1/search:
+  /api/v1/notes/search:
     get:
       consumes:
       - application/json
