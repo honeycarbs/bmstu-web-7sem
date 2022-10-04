@@ -14,8 +14,8 @@ func NewService(repository repository.Authorisation) *Service {
 	return &Service{repository: repository}
 }
 
-func (s *Service) CreateUser(u *auth.Account) error {
-	err := s.repository.CreateUser(u)
+func (s *Service) CreateAccount(u *auth.Account) error {
+	err := s.repository.CreateAccount(u)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (s *Service) CreateUser(u *auth.Account) error {
 }
 
 func (s *Service) GenerateJWT(u *auth.Account) (string, error) {
-	err := s.repository.GetUser(u)
+	err := s.repository.GetAccount(u)
 	if err != nil {
 		return "", err
 	}

@@ -1,9 +1,12 @@
 package postgres
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model/tag"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 )
 
@@ -40,6 +43,9 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 
 	if err != nil {
 		r.logger.Info(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return &e.CanNotCreateNoteErr{}
+		}
 		return err
 	}
 
@@ -56,6 +62,9 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return &e.CanNotCreateNoteErr{}
+		}
 		return err
 	}
 	return tx.Commit()
@@ -116,6 +125,9 @@ func (r *TagPostgres) GetOne(userID, tagID int) (tag.Tag, error) {
 	err := r.db.Get(&tag, query, userID, tagID)
 	if err != nil {
 		r.logger.Info(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return tag, &e.TagNotFoundErr{}
+		}
 	}
 	return tag, err
 }

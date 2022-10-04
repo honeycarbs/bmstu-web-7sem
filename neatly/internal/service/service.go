@@ -12,7 +12,7 @@ import (
 )
 
 type Authorisation interface {
-	CreateUser(u *auth.Account) error
+	CreateAccount(u *auth.Account) error
 	GenerateJWT(u *auth.Account) (string, error)
 }
 

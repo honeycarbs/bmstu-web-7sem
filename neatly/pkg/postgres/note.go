@@ -1,9 +1,12 @@
 package postgres
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model/note"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 )
 
@@ -28,7 +31,8 @@ func NewNotePostgres(db *sqlx.DB, logger logging.Logger) *NotePostgres {
 func (r *NotePostgres) Create(userID int, n *note.Note) error {
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		r.logger.Info(err)
+		return &e.CanNotCreateNoteErr{}
 	}
 
 	createNoteQuery := fmt.Sprintf(`
@@ -38,21 +42,21 @@ func (r *NotePostgres) Create(userID int, n *note.Note) error {
 	if err := row.Scan(&n.ID); err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return &e.CanNotCreateNoteErr{}
 	}
 	createNoteBodyQuery := fmt.Sprintf("INSERT INTO %s (id, body) VALUES ($1, $2)", notesBodyTable)
 	_, err = tx.Exec(createNoteBodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return &e.CanNotCreateNoteErr{}
 	}
 	createUsersNoteQuery := fmt.Sprintf("INSERT INTO %s (user_id, note_id) VALUES ($1, $2)", usersNotesTable)
 	_, err = tx.Exec(createUsersNoteQuery, userID, n.ID)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return &e.CanNotCreateNoteErr{}
 	}
 
 	return tx.Commit()
@@ -98,6 +102,9 @@ func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return note.Note{}, &e.NoteNotFoundErr{}
+		}
 		return note.Note{}, err
 	}
 
@@ -112,7 +119,9 @@ func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
-		return note.Note{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return note.Note{}, &e.NoteNotFoundErr{}
+		}
 	}
 
 	return n, tx.Commit()
@@ -129,7 +138,6 @@ func (r *NotePostgres) Delete(userID, noteID int) error {
 }
 
 func (r *NotePostgres) Update(userID int, n note.Note) error {
-	// TODO: update tasks
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -144,7 +152,9 @@ func (r *NotePostgres) Update(userID int, n note.Note) error {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
-		return err
+		if errors.Is(err, sql.ErrNoRows) {
+			return &e.NoteNotFoundErr{}
+		}
 	}
 
 	bodyQuery := fmt.Sprintf(
@@ -154,7 +164,9 @@ func (r *NotePostgres) Update(userID int, n note.Note) error {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
-		return err
+		if errors.Is(err, sql.ErrNoRows) {
+			return &e.NoteNotFoundErr{}
+		}
 	}
 
 	return tx.Commit()

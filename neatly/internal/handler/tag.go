@@ -1,10 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"neatly/internal/e"
 	"neatly/internal/model/tag"
+	"neatly/pkg/e"
 	"net/http"
 	"strconv"
 )
@@ -51,7 +52,10 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	err = h.services.Tag.Create(userID, noteID, &t)
 
 	if err != nil {
-		h.logger.Info(err)
+		if errors.Is(err, &e.NoteNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -90,6 +94,10 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
+		if errors.Is(err, &e.NoteNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -160,6 +168,10 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
+		if errors.Is(err, &e.TagNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -206,6 +218,10 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	err = h.services.Tag.Update(userID, tagID, t)
 	if err != nil {
 		h.logger.Info(err)
+		if errors.Is(err, &e.TagNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -243,6 +259,10 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
+		if errors.Is(err, &e.TagNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}

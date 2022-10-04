@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
-	"neatly/internal/e"
 	"neatly/internal/model/auth"
+	"neatly/pkg/e"
 	"net/http"
 )
 
@@ -38,7 +39,7 @@ func (h *Handler) register(ctx *gin.Context) {
 		return
 	}
 
-	err = h.services.Authorisation.CreateUser(&u)
+	err = h.services.Authorisation.CreateAccount(&u)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
@@ -71,7 +72,9 @@ func (h *Handler) login(ctx *gin.Context) {
 
 	token, err := h.services.Authorisation.GenerateJWT(&u)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, &e.PasswordDoesNotMatchErr{}) {
+			e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
+		}
 		return
 	}
 	jdto := h.mappers.Auth.MapJwtDTO(token)

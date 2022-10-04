@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"neatly/pkg/e"
 )
 
 type Account struct {
@@ -17,7 +18,7 @@ type Account struct {
 func (u *Account) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	if err != nil {
-		return fmt.Errorf("password does not match")
+		return &e.PasswordDoesNotMatchErr{}
 	}
 	return nil
 }

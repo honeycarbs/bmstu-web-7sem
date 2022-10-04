@@ -10,8 +10,8 @@ import (
 )
 
 type Authorisation interface {
-	CreateUser(u *auth.Account) error
-	GetUser(u *auth.Account) error
+	CreateAccount(u *auth.Account) error
+	GetAccount(u *auth.Account) error
 }
 
 type Note interface {

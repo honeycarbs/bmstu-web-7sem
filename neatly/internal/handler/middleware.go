@@ -3,7 +3,7 @@ package handler
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"neatly/internal/e"
+	"neatly/pkg/e"
 	"neatly/pkg/jwt"
 	"net/http"
 	"strings"

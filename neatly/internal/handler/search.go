@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"neatly/internal/e"
+	"neatly/pkg/e"
 	"net/http"
 )
 

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
-	"neatly/internal/e"
 	"neatly/internal/model/note"
+	"neatly/pkg/e"
 	"net/http"
 	"strconv"
 )
@@ -34,6 +35,10 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	var dto note.CreateNoteDTO
 	if err := ctx.BindJSON(&dto); err != nil {
 		h.logger.Info(err)
+		if errors.Is(err, &e.NoteNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
@@ -41,7 +46,6 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	n := h.mappers.Note.MapCreateNoteDTO(dto)
 	err = h.services.Note.Create(userID, &n)
 	if err != nil {
-		h.logger.Info(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -64,12 +68,20 @@ func (h *Handler) createNote(ctx *gin.Context) {
 func (h *Handler) getAllNotes(ctx *gin.Context) {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
+		if errors.Is(err, &e.AccountNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	notes, err := h.services.Note.GetAll(userID)
 	if err != nil {
+		if errors.Is(err, &e.NoteNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -106,6 +118,10 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 
 	n, err := h.services.Note.GetOne(userID, noteID)
 	if err != nil {
+		if errors.Is(err, &e.NoteNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
