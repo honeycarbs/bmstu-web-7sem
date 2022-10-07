@@ -3,10 +3,12 @@ package note
 import (
 	"neatly/internal/model/tag"
 	"strings"
+	"time"
 )
 
 const (
-	DEFAULT_NOTE_COLOR = "CFD2CF"
+	DefaultNoteColor = "CFD2CF"
+	shortBodyLen     = 255
 )
 
 type Note struct {
@@ -16,16 +18,15 @@ type Note struct {
 	ShortBody string    `json:"shortBody" db:"short_body"`
 	Tags      []tag.Tag `json:"tags" db:"tags"` // []tag.Tag
 	Color     string    `json:"color" db:"color"`
+	Edited    time.Time `json:"edited"`
 }
 
 func (n *Note) GenerateShortBody() {
-	var shortLen int
-	if len(n.Body) > 500 {
-		shortLen = 300
+	if len(n.Body) < shortBodyLen {
+		n.ShortBody = n.Body
 	} else {
-		shortLen = len(n.Body)
+		n.ShortBody = truncate(n.Body, shortBodyLen)
 	}
-	n.ShortBody = n.Body[0:shortLen] // TODO: make smart
 }
 
 func (n *Note) HasEveryTag(tagNames []string) bool {
@@ -44,4 +45,10 @@ func (n *Note) hasSpecificTag(tagName string) bool {
 		}
 	}
 	return false
+}
+
+func truncate(text string, width int) string {
+	r := []rune(text)
+	trunc := r[:width]
+	return string(trunc)
 }

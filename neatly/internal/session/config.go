@@ -6,6 +6,10 @@ import (
 	"sync"
 )
 
+const (
+	confPath = "etc/config/config.yml"
+)
+
 type DB struct {
 	Host     string `yaml:"host"`
 	Port     string `yaml:"port"`
@@ -39,7 +43,7 @@ func GetConfig() *Config {
 		logger := logging.GetLogger()
 		logger.Info("Reading application config")
 		instance = &Config{}
-		if err := cleanenv.ReadConfig("config/config.yml", instance); err != nil {
+		if err := cleanenv.ReadConfig(confPath, instance); err != nil {
 			help, _ := cleanenv.GetDescription(instance, nil)
 			logger.Info(help)
 			logger.Fatal(err)

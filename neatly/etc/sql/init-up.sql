@@ -1,0 +1,44 @@
+CREATE TABLE users (
+    id SERIAL NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE notes (
+    id SERIAL NOT NULL UNIQUE,
+    header VARCHAR(255) NOT NULL,
+    short_body VARCHAR(255),
+    color VARCHAR(6) NOT NULL,
+    edited TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE notes_body (
+    id INT REFERENCES notes(id) ON DELETE CASCADE NOT NULL,
+    body TEXT
+);
+
+CREATE TABLE users_notes (
+    id SERIAL NOT NULL UNIQUE,
+    users_id INT REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    notes_id INT REFERENCES notes(id) ON DELETE CASCADE NOT NULL
+);
+
+CREATE TABLE tags (
+    id SERIAL NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    color VARCHAR(6) NOT NULL
+);
+
+CREATE TABLE tags_notes (
+    id SERIAL NOT NULL UNIQUE,
+    tags_id INT REFERENCES tags(id) ON DELETE CASCADE NOT NULL,
+    notes_id INT REFERENCES notes(id) ON DELETE CASCADE NOT NULL
+);
+
+CREATE TABLE users_tags (
+    id SERIAL NOT NULL UNIQUE,
+    users_id INT REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    tags_id INT REFERENCES tags(id) ON DELETE CASCADE NOT NULL
+);
