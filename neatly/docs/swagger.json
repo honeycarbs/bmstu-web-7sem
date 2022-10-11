@@ -7,10 +7,10 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:8000",
     "basePath": "/",
     "paths": {
-        "/api/v1/auth/login": {
+        "/api/v1/accounts/login": {
             "post": {
                 "description": "login",
                 "consumes": [
@@ -20,7 +20,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "account"
                 ],
                 "summary": "Login",
                 "operationId": "login",
@@ -31,7 +31,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginAccountDTO"
+                            "$ref": "#/definitions/account.LoginAccountDTO"
                         }
                     }
                 ],
@@ -39,7 +39,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.JwtDTO"
+                            "$ref": "#/definitions/account.WithTokenDTO"
                         }
                     },
                     "500": {
@@ -57,7 +57,7 @@
                 }
             }
         },
-        "/api/v1/auth/register": {
+        "/api/v1/accounts/register": {
             "post": {
                 "description": "create account",
                 "consumes": [
@@ -78,13 +78,16 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterAccountDTO"
+                            "$ref": "#/definitions/account.RegisterAccountDTO"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -120,10 +123,10 @@
                 ],
                 "summary": "Get all notes from user",
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/note.GetAllNotesDTO"
                         }
                     },
                     "400": {
@@ -340,11 +343,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "integer"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -780,18 +780,78 @@
                     }
                 }
             }
+        },
+        "/api/v1/tags/{id}/tags/{tag_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "detach tag by ID from note by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Detach tag by ID from note by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "tag id",
+                        "name": "tag_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "auth.JwtDTO": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.LoginAccountDTO": {
+        "account.LoginAccountDTO": {
             "type": "object",
             "properties": {
                 "password": {
@@ -802,7 +862,7 @@
                 }
             }
         },
-        "auth.RegisterAccountDTO": {
+        "account.RegisterAccountDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -812,6 +872,23 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "account.WithTokenDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 },
                 "username": {
@@ -868,6 +945,9 @@
                     "type": "string"
                 },
                 "color": {
+                    "type": "string"
+                },
+                "edited": {
                     "type": "string"
                 },
                 "header": {

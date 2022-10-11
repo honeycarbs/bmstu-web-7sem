@@ -104,7 +104,7 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 
 	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
 
-	ctx.JSON(http.StatusCreated, dto)
+	ctx.JSON(http.StatusOK, dto)
 }
 
 // @Summary Get all tags
@@ -135,7 +135,7 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 
 	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
 
-	ctx.JSON(http.StatusCreated, dto)
+	ctx.JSON(http.StatusOK, dto)
 }
 
 // @Summary Get one tag by ID
@@ -164,7 +164,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 		return
 	}
 
-	tag, err := h.services.Tag.GetOne(userID, tagID)
+	t, err := h.services.Tag.GetOne(userID, tagID)
 
 	if err != nil {
 		h.logger.Info(err)
@@ -176,7 +176,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, tag)
+	ctx.JSON(http.StatusOK, t)
 }
 
 // @Summary Update tag by ID
@@ -267,5 +267,55 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, tagID)
+	ctx.Writer.WriteHeader(http.StatusNoContent)
+}
+
+// @Summary Detach tag by ID from note by ID
+// @Security ApiKeyAuth
+// @Tags tags
+// @Description detach tag by ID from note by ID
+// @Accept  json
+// @Produce  json
+// @Param   id  path  string  true  "id"
+// @Param   tag_id  path  string  true  "tag id"
+// @Success 200 {integer} integer 1
+// @Failure 500 {object}  e.ErrorResponse
+// @Failure 400,404 {object} e.ErrorResponse
+// @Failure default {object}  e.ErrorResponse
+// @Router /api/v1/tags/{id}/tags/{tag_id} [delete]
+func (h *Handler) detachTag(ctx *gin.Context) {
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.logger.Info(err)
+		return
+	}
+
+	noteID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		h.logger.Info("error while getting id from request")
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	tagID, err := strconv.Atoi(ctx.Param("tag_id"))
+	if err != nil {
+		h.logger.Info("error while getting id from request")
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = h.services.Tag.Detach(userID, tagID, noteID)
+
+	if err != nil {
+		h.logger.Info(err)
+		if errors.Is(err, &e.TagNotFoundErr{}) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+			return
+		}
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.Writer.WriteHeader(http.StatusNoContent)
+
 }

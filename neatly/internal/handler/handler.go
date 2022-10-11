@@ -13,15 +13,14 @@ import (
 )
 
 const (
-	authURLGroup  = "/auth"
-	registerURL   = "/register"
-	loginURL      = "/login"
-	apiURLGroup   = "/api"
-	notesURLGroup = "/notes"
-	tagsURLGroup  = "/tags"
-	tagID         = "tag_id"
-	searchURL     = "/search"
-	versionAPI    = "1"
+	accountsURLGroup = "/accounts"
+	registerURL      = "/register"
+	loginURL         = "/login"
+	apiURLGroup      = "/api"
+	notesURLGroup    = "/notes"
+	tagsURLGroup     = "/tags"
+	searchURL        = "/search"
+	versionAPI       = "1"
 )
 
 type Handler struct {
@@ -51,10 +50,10 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 
 	api := router.Group(fmt.Sprintf("%v/v%v", apiURLGroup, versionAPI))
 	{
-		auth := api.Group(authURLGroup)
+		accounts := api.Group(accountsURLGroup)
 		{
-			auth.POST(registerURL, h.register)
-			auth.POST(loginURL, h.login)
+			accounts.POST(registerURL, h.register)
+			accounts.POST(loginURL, h.login)
 		}
 
 		notes := api.Group(notesURLGroup, h.authenticate)
@@ -72,8 +71,9 @@ func (h *Handler) RegisterHandler(idDebug *bool) *gin.Engine {
 
 			tagsOnNote := notes.Group(fmt.Sprintf(":id%s", tagsURLGroup))
 			{
-				tagsOnNote.GET("", h.getAllTagsOnNote) // /api/notes/:id/tags/
-				tagsOnNote.POST("", h.createTag)       // /api/notes/:id/tags/
+				tagsOnNote.GET("", h.getAllTagsOnNote)
+				tagsOnNote.POST("", h.createTag)           // /api/notes/:id/tags/
+				tagsOnNote.DELETE("/:tag_id", h.detachTag) // /api/notes/:id/tags/
 			}
 		}
 		tags := api.Group(tagsURLGroup, h.authenticate)

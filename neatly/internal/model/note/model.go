@@ -31,14 +31,14 @@ func (n *Note) GenerateShortBody() {
 
 func (n *Note) HasEveryTag(tagNames []string) bool {
 	for _, tn := range tagNames {
-		if !n.hasSpecificTag(tn) {
+		if !n.HasSpecificTag(tn) {
 			return false
 		}
 	}
 	return true
 }
 
-func (n *Note) hasSpecificTag(tagName string) bool {
+func (n *Note) HasSpecificTag(tagName string) bool {
 	for _, t := range n.Tags {
 		if strings.Contains(strings.ToLower(t.Name), strings.ToLower(tagName)) {
 			return true

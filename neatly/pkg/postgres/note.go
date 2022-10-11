@@ -75,7 +75,6 @@ func (r *NotePostgres) GetAll(userID int) ([]note.Note, error) {
 	)
 
 	err := r.db.Select(&notes, getNotesQuery, userID)
-
 	if err != nil {
 		r.logger.Info(err)
 		return notes, err
@@ -98,6 +97,7 @@ func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
 		notesTable,
 		usersNotesTable,
 	)
+
 	err = r.db.Get(&n, selectNoteQuery, userID, noteID)
 	if err != nil {
 		tx.Rollback()

@@ -1,19 +1,19 @@
 package service
 
 import (
-	"neatly/internal/model/auth"
+	"neatly/internal/model/account"
 	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
 	"neatly/internal/repository"
-	authService "neatly/internal/service/auth"
+	authService "neatly/internal/service/account"
 	noteService "neatly/internal/service/note"
 	tagService "neatly/internal/service/tag"
 	"neatly/pkg/logging"
 )
 
 type Authorisation interface {
-	CreateAccount(u *auth.Account) error
-	GenerateJWT(u *auth.Account) (string, error)
+	CreateAccount(u *account.Account) error
+	GenerateJWT(u *account.Account) (string, error)
 }
 
 type Note interface {
@@ -32,6 +32,7 @@ type Tag interface {
 	GetOne(userID, tagID int) (tag.Tag, error)
 	Delete(userID, tagID int) error
 	Update(userID, tagID int, t tag.Tag) error
+	Detach(userID, tagID, noteID int) error
 }
 
 type Service struct {

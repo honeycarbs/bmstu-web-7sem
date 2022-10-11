@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
-	"neatly/internal/model/auth"
+	"neatly/internal/model/account"
 	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
 	"neatly/pkg/logging"
@@ -10,8 +10,8 @@ import (
 )
 
 type Authorisation interface {
-	CreateAccount(u *auth.Account) error
-	GetAccount(u *auth.Account) error
+	CreateAccount(u *account.Account) error
+	GetAccount(u *account.Account) error
 }
 
 type Note interface {
@@ -28,6 +28,7 @@ type Tag interface {
 	GetAllByNote(userID, noteID int) ([]tag.Tag, error)
 	GetOne(userID, tagID int) (tag.Tag, error)
 	Delete(userID, tagID int) error
+	Detach(userID, tagID, noteID int) error
 	Assign(tagID, noteID, userID int) error
 	Update(userID, tagID int, t tag.Tag) error
 }

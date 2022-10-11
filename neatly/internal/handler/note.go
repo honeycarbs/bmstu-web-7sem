@@ -60,7 +60,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 // @Description create note
 // @Accept  json
 // @Produce  json
-// @Success 201 {string} string 1
+// @Success 200 {object} note.GetAllNotesDTO
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
@@ -205,7 +205,7 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 // @Accept  json
 // @Produce json
 // @Param   id   path string  true  "id"
-// @Success 200 {integer} integer 1
+// @Success 204
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/notes/{id} [delete]
@@ -229,5 +229,5 @@ func (h *Handler) deleteNote(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, noteID)
+	ctx.Writer.WriteHeader(http.StatusNoContent)
 }

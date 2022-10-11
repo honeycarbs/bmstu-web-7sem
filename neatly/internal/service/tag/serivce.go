@@ -21,7 +21,7 @@ func NewService(tr repository.Tag, nr repository.Note, l logging.Logger) *Servic
 func (s *Service) Create(userID, noteID int, t *tag.Tag) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to auth")
+		return errors.New("note does not exists or does not belong to account")
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)
@@ -85,6 +85,40 @@ func (s *Service) Update(userID, tagID int, t tag.Tag) error {
 	}
 
 	return s.tagsRepository.Update(userID, tagID, t)
+}
+
+func (s *Service) Detach(userID, tagID, noteID int) error {
+	_, err := s.notesRepository.GetOne(userID, noteID)
+	if err != nil {
+		return errors.New("note does not exists or does not belong to account")
+	}
+
+	ns, err := s.notesRepository.GetAll(userID)
+	if err != nil {
+		return err
+	}
+
+	t, err := s.tagsRepository.GetOne(userID, tagID)
+	s.logger.Infof("Found tag %v: %v, %v", tagID, t.Name, t.Color)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range ns {
+		n.Tags, err = s.tagsRepository.GetAllByNote(userID, n.ID)
+		if err != nil {
+			return err
+		}
+		if n.HasSpecificTag(t.Name) && n.ID != noteID {
+			s.logger.Infof("Found this tag at note %v", n.ID)
+			err = s.tagsRepository.Detach(userID, tagID, noteID)
+			return err
+		}
+	}
+
+	s.logger.Info("Deleting tag")
+	err = s.tagsRepository.Delete(userID, tagID)
+	return err
 }
 
 func (s *Service) checkIfUnique(tags []tag.Tag, tu tag.Tag) (bool, int) {

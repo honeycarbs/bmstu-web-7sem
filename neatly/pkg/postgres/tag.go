@@ -49,7 +49,7 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 		return err
 	}
 
-	r.logger.Infof("Connecting tag with id %v and auth with id with id %v", t.ID, userID)
+	r.logger.Infof("Connecting tag with id %v and account with id with id %v", t.ID, userID)
 	userTagQuery := fmt.Sprintf(
 		`INSERT INTO %s
     			(users_id, tags_id)
@@ -150,6 +150,16 @@ func (r *TagPostgres) Update(userID, tagID int, t tag.Tag) error {
 				ut.tags_id = $3 AND ut.users_id = $4`,
 		tagsTable, usersTagsTable)
 	_, err := r.db.Exec(query, t.Name, t.Color, tagID, userID)
+
+	return err
+}
+
+func (r *TagPostgres) Detach(userID, tagID, noteID int) error {
+	query := fmt.Sprintf(
+		`DELETE FROM %s USING %s ut WHERE
+            	tags_notes.tags_id = ut.tags_id AND ut.users_id = $1 AND ut.tags_id = $2 AND notes_id = $3`,
+		notesTagsTable, usersTagsTable)
+	_, err := r.db.Exec(query, userID, tagID, noteID)
 
 	return err
 }

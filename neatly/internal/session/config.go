@@ -20,8 +20,8 @@ type DB struct {
 }
 
 type Listen struct {
-	Port   string `yaml:"port" env-default:"8080"`
-	BindIP string `yaml:"bind_ip" env-default:"localhost"`
+	Port   string `yaml:"port"`
+	BindIP string `yaml:"bind_ip"`
 }
 
 type JWT struct {
@@ -29,10 +29,10 @@ type JWT struct {
 }
 
 type Config struct {
-	IsDebug *bool `yaml:"is_debug"`
-	DB      DB    `yaml:"db"`
-	Listen  Listen
-	JWT     JWT `yaml:"jwt"`
+	IsDebug *bool  `yaml:"is_debug"`
+	DB      DB     `yaml:"db"`
+	Listen  Listen `yaml:"listen"`
+	JWT     JWT    `yaml:"jwt"`
 }
 
 var instance *Config

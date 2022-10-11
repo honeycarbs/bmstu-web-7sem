@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/cristalhq/jwt/v3"
-	"neatly/internal/model/auth"
+	"neatly/internal/model/account"
 	"neatly/internal/session"
 	"time"
 )
@@ -18,7 +18,7 @@ type UserClaims struct {
 	UserID int
 }
 
-func GenerateAccessToken(u auth.Account) (string, error) {
+func GenerateAccessToken(u account.Account) (string, error) {
 	key := []byte(session.GetConfig().JWT.Secret)
 
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)

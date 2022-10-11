@@ -1,4 +1,4 @@
-package auth
+package account
 
 type RegisterAccountDTO struct {
 	Name     string `json:"name"`
@@ -12,6 +12,9 @@ type LoginAccountDTO struct {
 	Password string `json:"password"`
 }
 
-type JwtDTO struct {
-	Token string `json:"token"`
+type WithTokenDTO struct {
+	Token    string `json:"token"`
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }

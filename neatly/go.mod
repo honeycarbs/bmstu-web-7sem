@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/cristalhq/jwt/v3 v3.1.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/ilyakaznacheev/cleanenv v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.2.0
@@ -20,6 +21,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
