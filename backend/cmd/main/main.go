@@ -61,5 +61,5 @@ func main() {
 	tagsHandler := tag.NewHandler(logger, services.Tag, mappers.Tag)
 	tagsHandler.Register(router)
 
-	neatly.Run(cfg, router, logger)
+	backend.Run(cfg, router, logger)
 }

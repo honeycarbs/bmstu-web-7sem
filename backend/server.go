@@ -1,4 +1,4 @@
-package neatly
+package backend
 
 import (
 	"errors"
