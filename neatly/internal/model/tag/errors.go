@@ -1,4 +1,4 @@
-package e
+package tag
 
 type CanNotCreateTagErr struct{}
 

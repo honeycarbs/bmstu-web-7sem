@@ -27,7 +27,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "account"
+                    "accounts"
                 ],
                 "summary": "Login",
                 "operationId": "login",
@@ -38,7 +38,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/account.LoginAccountDTO"
+                            "$ref": "#/definitions/accounts.LoginAccountDTO"
                         }
                     }
                 ],
@@ -46,7 +46,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/account.WithTokenDTO"
+                            "$ref": "#/definitions/accounts.WithTokenDTO"
                         }
                     },
                     "500": {
@@ -66,7 +66,7 @@ const docTemplate = `{
         },
         "/api/v1/accounts/register": {
             "post": {
-                "description": "create account",
+                "description": "create accounts",
                 "consumes": [
                     "application/json"
                 ],
@@ -77,15 +77,15 @@ const docTemplate = `{
                     "register"
                 ],
                 "summary": "Register",
-                "operationId": "create-account",
+                "operationId": "create-accounts",
                 "parameters": [
                     {
-                        "description": "account info",
+                        "description": "accounts info",
                         "name": "dto",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/account.RegisterAccountDTO"
+                            "$ref": "#/definitions/accounts.RegisterAccountDTO"
                         }
                     }
                 ],
@@ -858,7 +858,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "account.LoginAccountDTO": {
+        "accounts.LoginAccountDTO": {
             "type": "object",
             "properties": {
                 "password": {
@@ -869,7 +869,7 @@ const docTemplate = `{
                 }
             }
         },
-        "account.RegisterAccountDTO": {
+        "accounts.RegisterAccountDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -886,7 +886,7 @@ const docTemplate = `{
                 }
             }
         },
-        "account.WithTokenDTO": {
+        "accounts.WithTokenDTO": {
             "type": "object",
             "properties": {
                 "email": {

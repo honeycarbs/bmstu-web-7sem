@@ -1,4 +1,4 @@
-## Neatly. Workspace for your notes and (possibly) more
+## Neat.ly - Workspace for your notes and (possibly) more
 
 *Цель работы*: ~~сделать еще один ноушн~~ разработать приложение, позволяющее структурировать записи пользователя, 
 тегировать их и хранить в едином месте.
@@ -13,3 +13,7 @@ Use-case диаграмма системы:
 ![uc](meta/neatly(uc).png)
 ER-диаграмма сущностей системы:
 ![er](meta/neatly(er).png)
+
+---
+### Макетирование
+[макет Figma](https://www.figma.com/file/ugmXv9xuNnLZXulQg2kEH9/neat.ly)

@@ -1,4 +1,4 @@
-package postgres
+package psqlclient
 
 import (
 	"fmt"
@@ -6,9 +6,11 @@ import (
 	"neatly/internal/session"
 )
 
-//type PostgresDBCfg struct {}
+type Client struct {
+	DB *sqlx.DB
+}
 
-func NewDB(cfg session.DB) (*sqlx.DB, error) {
+func NewClient(cfg session.DB) (*Client, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		cfg.Host,
@@ -27,5 +29,7 @@ func NewDB(cfg session.DB) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return &Client{
+		DB: db,
+	}, nil
 }

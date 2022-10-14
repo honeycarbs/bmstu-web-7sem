@@ -1,15 +1,21 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"neatly"
-	"neatly/internal/handler"
+	_ "neatly/docs"
+	"neatly/internal/handlers/account"
+	"neatly/internal/handlers/note"
+	"neatly/internal/handlers/tag"
 	"neatly/internal/mapper"
 	"neatly/internal/repository"
 	"neatly/internal/service"
 	"neatly/internal/session"
+	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
-	"neatly/pkg/postgres"
 )
 
 // @title Neat.ly API
@@ -29,22 +35,31 @@ func main() {
 
 	cfg := session.GetConfig()
 
-	db, err := postgres.NewDB(cfg.DB)
+	client, err := psqlclient.NewClient(cfg.DB)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
+	logger.Info("Create new gin router")
+	router := gin.New()
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	logger.Info("initializing repository")
-	repos := repository.New(db, logger)
+	repos := repository.New(client, logger)
 
 	logger.Info("initializing services")
 	services := service.New(repos, logger)
-
-	logger.Info("initializing mappers")
 	mappers := mapper.New(logger)
 
-	logger.Info("initializing handler")
-	handlers := handler.New(services, mappers, logger)
+	accountHandler := account.NewHandler(logger, services.Account, mappers.Account)
+	accountHandler.Register(router)
 
-	neatly.Run(cfg, handlers.RegisterHandler(cfg.IsDebug), logger)
+	notesHandler := note.NewHandler(logger, services.Note, mappers.Note)
+	notesHandler.Register(router)
+
+	tagsHandler := tag.NewHandler(logger, services.Tag, mappers.Tag)
+	tagsHandler.Register(router)
+
+	neatly.Run(cfg, router, logger)
 }

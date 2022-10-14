@@ -1,4 +1,4 @@
-package postgres
+package psql
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model/account"
-	"neatly/pkg/e"
+	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
 )
 
@@ -19,9 +19,9 @@ type AuthPostgres struct {
 	logger logging.Logger
 }
 
-func NewAuthPostgres(db *sqlx.DB, logger logging.Logger) *AuthPostgres {
+func NewAuthPostgres(client *psqlclient.Client, logger logging.Logger) *AuthPostgres {
 	return &AuthPostgres{
-		db:     db,
+		db:     client.DB,
 		logger: logger,
 	}
 }
@@ -32,11 +32,11 @@ func (r *AuthPostgres) CreateAccount(u *account.Account) error {
 		usersTable,
 	)
 
-	r.logger.Info("Creating account")
+	r.logger.Info("Creating accounts")
 	row := r.db.QueryRow(query, u.Name, u.Username, u.Email, u.PasswordHash)
 	if err := row.Scan(&u.ID); err != nil {
 		r.logger.Info(err)
-		return &e.CanNotCreateAccountErr{}
+		return &account.CanNotCreateAccountErr{}
 	}
 	return nil
 }
@@ -48,14 +48,14 @@ func (r *AuthPostgres) GetAccount(u *account.Account) error {
 		usersTable,
 	)
 
-	r.logger.Infof("Get account %v from db", u.ID)
+	r.logger.Infof("Get accounts %v from db", u.ID)
 	err := r.db.Get(u, query, &u.Username)
 	if err != nil {
 		r.logger.Info(err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return &e.AccountNotFoundErr{}
+			return &account.AccountNotFoundErr{}
 		}
-		return &e.CanNotLoginErr{}
+		return &account.CanNotLoginErr{}
 	}
 
 	return nil

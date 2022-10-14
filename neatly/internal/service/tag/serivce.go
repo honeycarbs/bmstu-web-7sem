@@ -21,7 +21,7 @@ func NewService(tr repository.Tag, nr repository.Note, l logging.Logger) *Servic
 func (s *Service) Create(userID, noteID int, t *tag.Tag) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to account")
+		return errors.New("note does not exists or does not belong to accounts")
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)
@@ -90,7 +90,7 @@ func (s *Service) Update(userID, tagID int, t tag.Tag) error {
 func (s *Service) Detach(userID, tagID, noteID int) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to account")
+		return errors.New("note does not exists or does not belong to accounts")
 	}
 
 	ns, err := s.notesRepository.GetAll(userID)

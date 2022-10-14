@@ -8,10 +8,10 @@ import (
 )
 
 type Service struct {
-	repository repository.Authorisation
+	repository repository.Account
 }
 
-func NewService(repository repository.Authorisation) *Service {
+func NewService(repository repository.Account) *Service {
 	return &Service{repository: repository}
 }
 
@@ -36,7 +36,7 @@ func (s *Service) GenerateJWT(a *account.Account) (string, error) {
 		return "", err
 	}
 
-	token, err := jwt.GenerateAccessToken(*a)
+	token, err := jwt.GenerateAccessToken(a.ID)
 	if err != nil {
 		return "", err
 	}

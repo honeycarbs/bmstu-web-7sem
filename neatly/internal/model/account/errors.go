@@ -1,9 +1,9 @@
-package e
+package account
 
 type CanNotCreateAccountErr struct{}
 
 func (a *CanNotCreateAccountErr) Error() string {
-	return "can't create account"
+	return "can't create accounts"
 }
 
 type AccountNotFoundErr struct{}

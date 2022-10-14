@@ -5,7 +5,6 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"golang.org/x/crypto/bcrypt"
-	"neatly/pkg/e"
 )
 
 type Account struct {
@@ -20,7 +19,7 @@ type Account struct {
 func (a *Account) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
 	if err != nil {
-		return &e.PasswordDoesNotMatchErr{}
+		return &PasswordDoesNotMatchErr{}
 	}
 	return nil
 }

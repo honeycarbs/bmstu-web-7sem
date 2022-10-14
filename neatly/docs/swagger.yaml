@@ -162,15 +162,15 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       summary: Login
       tags:
-      - account
+      - accounts
   /api/v1/accounts/register:
     post:
       consumes:
       - application/json
-      description: create account
-      operationId: create-account
+      description: create accounts
+      operationId: create-accounts
       parameters:
-      - description: account info
+      - description: accounts info
         in: body
         name: dto
         required: true

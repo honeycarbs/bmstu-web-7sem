@@ -1,4 +1,4 @@
-package handler
+package middleware
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ const (
 	userCtx             = "user_id"
 )
 
-func (h *Handler) authenticate(ctx *gin.Context) {
+func Authenticate(ctx *gin.Context) {
 	header := ctx.GetHeader(authorizationHeader)
 	if header == "" {
 		e.NewErrorResponse(ctx, http.StatusUnauthorized, errors.New("unauthorized"))
@@ -33,7 +33,7 @@ func (h *Handler) authenticate(ctx *gin.Context) {
 	ctx.Set(userCtx, userID)
 }
 
-func (h *Handler) getUserID(ctx *gin.Context) (int, error) {
+func GetUserID(ctx *gin.Context) (int, error) {
 	id, ok := ctx.Get(userCtx)
 	if !ok {
 		return 0, errors.New("can't get authorization parameters")

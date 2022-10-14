@@ -1,12 +1,46 @@
-package handler
+package account
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"neatly/internal/mapper"
 	"neatly/internal/model/account"
+	"neatly/internal/service"
 	"neatly/pkg/e"
+	"neatly/pkg/logging"
 	"net/http"
 )
+
+const (
+	accountsURLGroup = "/accounts"
+	registerURL      = "/register"
+	loginURL         = "/login"
+	apiURLGroup      = "/api"
+	apiVersion       = "1"
+)
+
+type Handler struct {
+	logger  logging.Logger
+	service service.Account
+	mapper  mapper.Account
+}
+
+func NewHandler(logger logging.Logger, service service.Account, mapper mapper.Account) *Handler {
+	return &Handler{logger: logger, service: service, mapper: mapper}
+}
+
+func (h *Handler) Register(router *gin.Engine) {
+	groupName := fmt.Sprintf("%v/v%v/%v", apiURLGroup, apiVersion, accountsURLGroup)
+
+	h.logger.Tracef("Register route: %v", groupName)
+
+	group := router.Group(groupName)
+	{
+		group.POST(registerURL, h.register)
+		group.POST(loginURL, h.login)
+	}
+}
 
 // @Summary Register
 // @Tags register
@@ -23,7 +57,7 @@ func (h *Handler) register(ctx *gin.Context) {
 	var (
 		err error
 		dto account.RegisterAccountDTO
-		u   account.Account
+		a   account.Account
 	)
 
 	if err = ctx.BindJSON(&dto); err != nil {
@@ -32,14 +66,14 @@ func (h *Handler) register(ctx *gin.Context) {
 		return
 	}
 
-	u, err = h.mappers.Account.MapRegisterAccountDTO(dto)
+	a, err = h.mapper.MapRegisterAccountDTO(dto)
 	if err != nil {
 		h.logger.Error(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.services.Authorisation.CreateAccount(&u)
+	err = h.service.CreateAccount(&a)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
@@ -68,17 +102,16 @@ func (h *Handler) login(ctx *gin.Context) {
 		return
 	}
 
-	a := h.mappers.Account.MapLogInAccountDTO(loginDto)
-	//a = h.services.Authorisation.
+	a := h.mapper.MapLogInAccountDTO(loginDto)
 
-	token, err := h.services.Authorisation.GenerateJWT(&a)
+	token, err := h.service.GenerateJWT(&a)
 	if err != nil {
-		if errors.Is(err, &e.PasswordDoesNotMatchErr{}) {
+		if errors.Is(err, &account.PasswordDoesNotMatchErr{}) {
 			e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
 		}
 		return
 	}
-	loginWithTokenDto := h.mappers.Account.MapAccountWithTokenDTO(token, a)
+	loginWithTokenDto := h.mapper.MapAccountWithTokenDTO(token, a)
 
 	ctx.JSON(http.StatusOK, loginWithTokenDto)
 }

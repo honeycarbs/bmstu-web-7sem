@@ -1,14 +1,58 @@
-package handler
+package tag
 
 import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"neatly/internal/handlers/middleware"
+	"neatly/internal/mapper"
+	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
+	"neatly/internal/service"
 	"neatly/pkg/e"
+	"neatly/pkg/logging"
 	"net/http"
 	"strconv"
 )
+
+const (
+	apiURLGroup   = "/api"
+	notesURLGroup = "/notes"
+	tagsURLGroup  = "/tags"
+	apiVersion    = "1"
+)
+
+type Handler struct {
+	logger  logging.Logger
+	service service.Tag
+	mapper  mapper.Tag
+}
+
+func NewHandler(logger logging.Logger, service service.Tag, mapper mapper.Tag) *Handler {
+	return &Handler{logger: logger, service: service, mapper: mapper}
+}
+
+func (h *Handler) Register(router *gin.Engine) {
+	tagsGroupName := fmt.Sprintf("%v/v%v/%v", apiURLGroup, apiVersion, tagsURLGroup)
+	tagsOnNoteGroupName := fmt.Sprintf("%v/v%v/%v/%v", apiURLGroup, apiVersion, notesURLGroup, tagsURLGroup)
+
+	h.logger.Tracef("Register route: %v", tagsGroupName)
+	tagsGroup := router.Group(tagsGroupName, middleware.Authenticate)
+	{
+		tagsGroup.GET("", h.getAllTags)
+		tagsGroup.GET("/:id", h.getOneTag)
+		tagsGroup.PATCH("/:id", h.updateTag)
+		tagsGroup.DELETE("/:id", h.deleteTag)
+	}
+
+	h.logger.Tracef("Register route: %v", tagsOnNoteGroupName)
+	tagsOnNoteGroup := router.Group(tagsOnNoteGroupName, middleware.Authenticate)
+	{
+		tagsOnNoteGroup.GET("", h.getAllTagsOnNote)
+		tagsOnNoteGroup.POST("", h.createTag)           // /api/notes/:id/tags/
+		tagsOnNoteGroup.DELETE("/:tag_id", h.detachTag) // /api/notes/:id/tags/
+	}
+}
 
 // @Summary Create tag
 // @Security ApiKeyAuth
@@ -24,7 +68,7 @@ import (
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/notes/{id}/tags [post]
 func (h *Handler) createTag(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
@@ -48,11 +92,11 @@ func (h *Handler) createTag(ctx *gin.Context) {
 		return
 	}
 
-	t = h.mappers.Tag.MapCreateTagDTO(dto)
-	err = h.services.Tag.Create(userID, noteID, &t)
+	t = h.mapper.MapCreateTagDTO(dto)
+	err = h.service.Create(userID, noteID, &t)
 
 	if err != nil {
-		if errors.Is(err, &e.NoteNotFoundErr{}) {
+		if errors.Is(err, &note.NoteNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}
@@ -77,7 +121,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/notes/{id}/tags [get]
 func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
@@ -90,11 +134,11 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 		return
 	}
 
-	tags, err := h.services.Tag.GetAllByNote(userID, noteID)
+	tags, err := h.service.GetAllByNote(userID, noteID)
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &e.NoteNotFoundErr{}) {
+		if errors.Is(err, &note.NoteNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}
@@ -102,7 +146,7 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 		return
 	}
 
-	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
+	dto := h.mapper.MapGetAllTagsDTO(tags)
 
 	ctx.JSON(http.StatusOK, dto)
 }
@@ -119,13 +163,13 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/tags [get]
 func (h *Handler) getAllTags(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
 	}
 
-	tags, err := h.services.Tag.GetAll(userID)
+	tags, err := h.service.GetAll(userID)
 
 	if err != nil {
 		h.logger.Info(err)
@@ -133,7 +177,7 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 		return
 	}
 
-	dto := h.mappers.Tag.MapGetAllTagsDTO(tags)
+	dto := h.mapper.MapGetAllTagsDTO(tags)
 
 	ctx.JSON(http.StatusOK, dto)
 }
@@ -151,7 +195,7 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/tags/{id} [get]
 func (h *Handler) getOneTag(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
@@ -164,11 +208,11 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 		return
 	}
 
-	t, err := h.services.Tag.GetOne(userID, tagID)
+	t, err := h.service.GetOne(userID, tagID)
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &e.TagNotFoundErr{}) {
+		if errors.Is(err, &tag.TagNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}
@@ -193,7 +237,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/tags/{id} [patch]
 func (h *Handler) updateTag(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		return
 	}
@@ -214,11 +258,11 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 		return
 	}
 
-	t := h.mappers.Tag.MapUpdateTagDTO(dto)
-	err = h.services.Tag.Update(userID, tagID, t)
+	t := h.mapper.MapUpdateTagDTO(dto)
+	err = h.service.Update(userID, tagID, t)
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &e.TagNotFoundErr{}) {
+		if errors.Is(err, &tag.TagNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}
@@ -242,7 +286,7 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/tags/{id} [delete]
 func (h *Handler) deleteTag(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
@@ -255,11 +299,11 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 		return
 	}
 
-	err = h.services.Tag.Delete(userID, tagID)
+	err = h.service.Delete(userID, tagID)
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &e.TagNotFoundErr{}) {
+		if errors.Is(err, &tag.TagNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}
@@ -284,7 +328,7 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 // @Failure default {object}  e.ErrorResponse
 // @Router /api/v1/tags/{id}/tags/{tag_id} [delete]
 func (h *Handler) detachTag(ctx *gin.Context) {
-	userID, err := h.getUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		h.logger.Info(err)
 		return
@@ -304,11 +348,11 @@ func (h *Handler) detachTag(ctx *gin.Context) {
 		return
 	}
 
-	err = h.services.Tag.Detach(userID, tagID, noteID)
+	err = h.service.Detach(userID, tagID, noteID)
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &e.TagNotFoundErr{}) {
+		if errors.Is(err, &tag.TagNotFoundErr{}) {
 			e.NewErrorResponse(ctx, http.StatusNotFound, err)
 			return
 		}

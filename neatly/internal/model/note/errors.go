@@ -1,4 +1,4 @@
-package e
+package note
 
 type CanNotCreateNoteErr struct{}
 

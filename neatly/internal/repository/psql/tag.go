@@ -1,12 +1,13 @@
-package postgres
+package psql
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
-	"neatly/pkg/e"
+	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
 )
 
@@ -21,8 +22,8 @@ type TagPostgres struct {
 	logger logging.Logger
 }
 
-func NewTagPostgres(db *sqlx.DB, logger logging.Logger) *TagPostgres {
-	return &TagPostgres{db: db, logger: logger}
+func NewTagPostgres(client *psqlclient.Client, logger logging.Logger) *TagPostgres {
+	return &TagPostgres{db: client.DB, logger: logger}
 }
 
 func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
@@ -44,12 +45,12 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 	if err != nil {
 		r.logger.Info(err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return &e.CanNotCreateNoteErr{}
+			return &note.CanNotCreateNoteErr{}
 		}
 		return err
 	}
 
-	r.logger.Infof("Connecting tag with id %v and account with id with id %v", t.ID, userID)
+	r.logger.Infof("Connecting tag with id %v and accounts with id with id %v", t.ID, userID)
 	userTagQuery := fmt.Sprintf(
 		`INSERT INTO %s
     			(users_id, tags_id)
@@ -63,7 +64,7 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 		tx.Rollback()
 		r.logger.Info(err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return &e.CanNotCreateNoteErr{}
+			return &note.CanNotCreateNoteErr{}
 		}
 		return err
 	}
@@ -114,7 +115,7 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]tag.Tag, error) {
 }
 
 func (r *TagPostgres) GetOne(userID, tagID int) (tag.Tag, error) {
-	var tag tag.Tag
+	var t tag.Tag
 
 	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
     							INNER JOIN %s ut ON ut.tags_id = t.id
@@ -122,14 +123,14 @@ func (r *TagPostgres) GetOne(userID, tagID int) (tag.Tag, error) {
     							WHERE users_id = $1 AND t.id = $2`,
 		tagsTable, usersTagsTable, notesTagsTable)
 
-	err := r.db.Get(&tag, query, userID, tagID)
+	err := r.db.Get(&t, query, userID, tagID)
 	if err != nil {
 		r.logger.Info(err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return tag, &e.TagNotFoundErr{}
+			return t, &tag.TagNotFoundErr{}
 		}
 	}
-	return tag, err
+	return t, err
 }
 
 func (r *TagPostgres) Delete(userID, tagID int) error {

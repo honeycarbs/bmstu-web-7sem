@@ -11,7 +11,7 @@ import (
 	"neatly/pkg/logging"
 )
 
-type Authorisation interface {
+type Account interface {
 	CreateAccount(u *account.Account) error
 	GenerateJWT(u *account.Account) (string, error)
 }
@@ -36,15 +36,15 @@ type Tag interface {
 }
 
 type Service struct {
-	Authorisation
+	Account
 	Note
 	Tag
 }
 
 func New(repo *repository.Repository, logger logging.Logger) *Service {
 	return &Service{
-		Authorisation: authService.NewService(repo.Authorisation),
-		Note:          noteService.NewService(repo.Note, repo.Tag, logger),
-		Tag:           tagService.NewService(repo.Tag, repo.Note, logger),
+		Account: authService.NewService(repo.Account),
+		Note:    noteService.NewService(repo.Note, repo.Tag, logger),
+		Tag:     tagService.NewService(repo.Tag, repo.Note, logger),
 	}
 }

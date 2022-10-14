@@ -1,17 +1,17 @@
 package repository
 
 import (
-	"github.com/jmoiron/sqlx"
 	"neatly/internal/model/account"
 	"neatly/internal/model/note"
 	"neatly/internal/model/tag"
+	"neatly/internal/repository/psql"
+	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
-	"neatly/pkg/postgres"
 )
 
-type Authorisation interface {
-	CreateAccount(u *account.Account) error
-	GetAccount(u *account.Account) error
+type Account interface {
+	CreateAccount(a *account.Account) error
+	GetAccount(a *account.Account) error
 }
 
 type Note interface {
@@ -34,15 +34,15 @@ type Tag interface {
 }
 
 type Repository struct {
-	Authorisation
+	Account
 	Note
 	Tag
 }
 
-func New(db *sqlx.DB, logger logging.Logger) *Repository {
+func New(client *psqlclient.Client, logger logging.Logger) *Repository {
 	return &Repository{
-		Authorisation: postgres.NewAuthPostgres(db, logger),
-		Note:          postgres.NewNotePostgres(db, logger),
-		Tag:           postgres.NewTagPostgres(db, logger),
+		Account: psql.NewAuthPostgres(client, logger),
+		Note:    psql.NewNotePostgres(client, logger),
+		Tag:     psql.NewTagPostgres(client, logger),
 	}
 }
