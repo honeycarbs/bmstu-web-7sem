@@ -33,10 +33,12 @@ func NewHandler(logger logging.Logger, service service.Tag, mapper mapper.Tag) *
 }
 
 func (h *Handler) Register(router *gin.Engine) {
-	tagsGroupName := fmt.Sprintf("%v/v%v/%v", apiURLGroup, apiVersion, tagsURLGroup)
-	tagsOnNoteGroupName := fmt.Sprintf("%v/v%v/%v/%v", apiURLGroup, apiVersion, notesURLGroup, tagsURLGroup)
+	tagsGroupName := fmt.Sprintf("%v/v%v%v", apiURLGroup, apiVersion, tagsURLGroup)
+	tagsOnNoteGroupName := fmt.Sprintf("%v/v%v%v/:id%v", apiURLGroup, apiVersion, notesURLGroup, tagsURLGroup)
 
 	h.logger.Tracef("Register route: %v", tagsGroupName)
+	h.logger.Tracef("Register route: %v", tagsOnNoteGroupName)
+
 	tagsGroup := router.Group(tagsGroupName, middleware.Authenticate)
 	{
 		tagsGroup.GET("", h.getAllTags)

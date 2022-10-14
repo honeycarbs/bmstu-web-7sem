@@ -5,7 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"neatly"
+	"neatly/cmd/server"
 	_ "neatly/docs"
 	"neatly/internal/handlers/account"
 	"neatly/internal/handlers/note"
@@ -61,5 +61,5 @@ func main() {
 	tagsHandler := tag.NewHandler(logger, services.Tag, mappers.Tag)
 	tagsHandler.Register(router)
 
-	backend.Run(cfg, router, logger)
+	server.Run(cfg, router, logger)
 }

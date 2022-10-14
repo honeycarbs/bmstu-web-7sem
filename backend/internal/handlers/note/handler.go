@@ -37,7 +37,7 @@ func NewHandler(logger logging.Logger, service service.Note, mapper mapper.Note)
 }
 
 func (h *Handler) Register(router *gin.Engine) {
-	groupName := fmt.Sprintf("%v/v%v/%v", apiURLGroup, apiVersion, notesURLGroup)
+	groupName := fmt.Sprintf("%v/v%v%v", apiURLGroup, apiVersion, notesURLGroup)
 
 	h.logger.Tracef("Register route: %v", groupName)
 
