@@ -11,12 +11,13 @@ const (
 )
 
 type DB struct {
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	DBName   string `yaml:"dbname"`
-	SSLMode  string `yaml:"ssl_mode"`
+	Host           string `yaml:"host"`
+	Port           string `yaml:"port"`
+	User           string `yaml:"user"`
+	Password       string `yaml:"password"`
+	DBName         string `yaml:"dbname"`
+	SSLMode        string `yaml:"ssl_mode"`
+	MigrationsPath string `yaml:"migrations_path"`
 }
 
 type Listen struct {

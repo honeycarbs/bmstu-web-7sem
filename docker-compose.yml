@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: neatly-backend
+    command: ./app
+    ports:
+      - 8000:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - neatly-postgres
+
+  neatly-postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=neatly
+      - POSTGRES_PASSWORD=neatly
+      - PGDATA=/pgdata
+      - POSTGRES_DB=neatly

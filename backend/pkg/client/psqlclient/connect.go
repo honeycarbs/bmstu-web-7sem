@@ -2,8 +2,12 @@ package psqlclient
 
 import (
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/session"
+	"neatly/pkg/logging"
 )
 
 type Client struct {
@@ -21,6 +25,12 @@ func NewClient(cfg session.DB) (*Client, error) {
 		cfg.SSLMode,
 	))
 	if err != nil {
+		logging.GetLogger().Info("Error while connecting to db")
+		return nil, err
+	}
+
+	err = runMigrations(db, cfg.DBName, cfg.MigrationsPath)
+	if err != nil {
 		return nil, err
 	}
 
@@ -32,4 +42,22 @@ func NewClient(cfg session.DB) (*Client, error) {
 	return &Client{
 		DB: db,
 	}, nil
+}
+
+func runMigrations(db *sqlx.DB, dbname string, migrationsPath string) error {
+	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+	if err != nil {
+		return err
+	}
+	logging.GetLogger().Info(migrationsPath, dbname)
+	m, err := migrate.NewWithDatabaseInstance("file://"+migrationsPath, dbname, driver)
+	if err != nil {
+		return err
+	}
+
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }

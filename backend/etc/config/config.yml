@@ -4,11 +4,12 @@ listen:
   bind_ip: "localhost"
   port: "8000"
 db:
-  host: "localhost"
+  host: "neatly-postgres"
   port: "5432"
   user: "neatly"
   password: "neatly"
   dbname: "neatly"
   ssl_mode: "disable"
+  migrations_path: "etc/migrations"
 jwt:
   secret: "$ecr3t"

@@ -30,7 +30,7 @@ func Run(cfg *session.Config, handler http.Handler, logger logging.Logger) {
 	}
 
 	logger.Infof("trying to listen to %s:%s", cfg.Listen.BindIP, cfg.Listen.Port)
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Listen.BindIP, cfg.Listen.Port))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Listen.Port))
 	if err != nil {
 		logger.Fatal(err)
 	}
