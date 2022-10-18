@@ -12,6 +12,7 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - neatly-postgres
+      - nginx
 
   neatly-postgres:
     image: postgres:latest
@@ -22,3 +23,12 @@ services:
       - POSTGRES_PASSWORD=neatly
       - PGDATA=/pgdata
       - POSTGRES_DB=neatly
+
+  nginx:
+    build: ./backend/etc/nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./backend/etc/nginx/static/:/usr/share/nginx/html/
+      - ./backend/etc/nginx/conf.d/:/etc/nginx/conf.d/
+    restart: always

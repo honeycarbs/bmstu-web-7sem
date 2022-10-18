@@ -43,7 +43,6 @@ func (h *Handler) Register(router *gin.Engine) {
 
 	group := router.Group(groupName, middleware.Authenticate)
 	{
-		group.GET(searchURL, h.search)
 		group.GET("", h.getAllNotes)       // /api/v1/notes
 		group.POST("", h.createNote)       // /api/v1/notes
 		group.GET("/:id", h.getOneNote)    // /api/v1/notes/:id
@@ -94,12 +93,13 @@ func (h *Handler) createNote(ctx *gin.Context) {
 		"%s%s/%v", apiURLGroup, notesURLGroup, n.ID))
 }
 
-// @Summary Get all notes from user
+// @Summary Get all notes from user filter by tag
 // @Security ApiKeyAuth
 // @Tags notes
 // @Description create note
 // @Accept  json
 // @Produce  json
+// @Param   tag query  string  false  "notes search by tag"
 // @Success 200 {object} note.GetAllNotesDTO
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
@@ -116,18 +116,32 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 		return
 	}
 
-	notes, err := h.service.GetAll(userID)
-	if err != nil {
-		if errors.Is(err, &note.NoteNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+	var ns []note.Note
+
+	keys := ctx.Request.URL.Query()
+	values := keys[tagSearchKey]
+	if values == nil {
+		ns, err = h.service.GetAll(userID)
+		if err != nil {
+			if errors.Is(err, &note.NoteNotFoundErr{}) {
+				e.NewErrorResponse(ctx, http.StatusNotFound, err)
+				return
+			}
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 			return
 		}
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
-		return
+	} else {
+		ns, err = h.service.FindByTags(userID, values)
+		if err != nil {
+			h.logger.Info(err)
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+			return
+		}
 	}
-	ndto := h.mapper.MapGetAllNotesDTO(notes)
 
-	ctx.JSON(http.StatusOK, ndto)
+	dto := h.mapper.MapGetAllNotesDTO(ns)
+
+	ctx.JSON(http.StatusOK, dto)
 }
 
 // @Summary Get Note By Id
@@ -270,41 +284,4 @@ func (h *Handler) deleteNote(ctx *gin.Context) {
 	}
 
 	ctx.Writer.WriteHeader(http.StatusNoContent)
-}
-
-// @Summary Search Note
-// @Security ApiKeyAuth
-// @Tags search
-// @Description search note
-// @ID search-note
-// @Accept  json
-// @Produce json
-// @Param   tag query  string  false  "notes search by tag"
-// @Success 200 {object} note.GetAllNotesDTO
-// @Failure 500 {object} e.ErrorResponse
-// @Failure default {object} e.ErrorResponse
-// @Router /api/v1/notes/search [get]
-func (h *Handler) search(ctx *gin.Context) {
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		h.logger.Info(err)
-		return
-	}
-
-	keys := ctx.Request.URL.Query()
-	values := keys[tagSearchKey]
-	if values == nil {
-		ctx.JSON(http.StatusBadRequest, fmt.Sprint("malformed query"))
-	}
-
-	h.logger.Infof("Values got from req: %v", values)
-	ns, err := h.service.FindByTags(userID, values)
-	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
-		return
-	}
-	dto := h.mapper.MapGetAllNotesDTO(ns)
-
-	ctx.JSON(http.StatusOK, dto)
 }

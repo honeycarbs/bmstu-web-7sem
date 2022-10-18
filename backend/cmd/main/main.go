@@ -1,10 +1,6 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"neatly/cmd/server"
 	_ "neatly/docs"
 	"neatly/internal/handlers/account"
@@ -16,6 +12,11 @@ import (
 	"neatly/internal/session"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title Neat.ly API
@@ -43,7 +44,7 @@ func main() {
 	logger.Info("Create new gin router")
 	router := gin.New()
 
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("api/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	logger.Info("initializing repository")
 	repos := repository.New(client, logger)
