@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"neatly/pkg/e"
 	"neatly/pkg/jwt"
+	"neatly/pkg/logging"
 	"net/http"
 	"strings"
 )
@@ -29,6 +30,8 @@ func Authenticate(ctx *gin.Context) {
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
 	}
+
+	logging.GetLogger().Info("authorized")
 
 	ctx.Set(userCtx, userID)
 }

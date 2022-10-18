@@ -18,3 +18,9 @@ type WithTokenDTO struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type GetAccountDTO struct {
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}

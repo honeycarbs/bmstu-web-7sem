@@ -41,8 +41,7 @@ func (r *AuthPostgres) CreateAccount(u *account.Account) error {
 	return nil
 }
 
-func (r *AuthPostgres) GetAccount(u *account.Account) error {
-	logging.GetLogger().Infof("%s, %s", u.Username, u.Password)
+func (r *AuthPostgres) AuthorizeAccount(u *account.Account) error {
 	query := fmt.Sprintf(
 		"SELECT id, name, username, password_hash, email FROM %s WHERE username=$1",
 		usersTable,
@@ -59,4 +58,25 @@ func (r *AuthPostgres) GetAccount(u *account.Account) error {
 	}
 
 	return nil
+}
+
+func (r *AuthPostgres) GetOne(userID int) (account.Account, error) {
+	query := fmt.Sprintf(
+		"SELECT id, name, username, email FROM %s WHERE id=$1",
+		usersTable,
+	)
+
+	var a account.Account
+
+	err := r.db.Get(&a, query, userID)
+	if err != nil {
+		r.logger.Info(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return a, &account.AccountNotFoundErr{}
+		}
+		return a, &account.CanNotGetErr{}
+	}
+	r.logger.Infof("Got account %v from db", a.ID)
+
+	return a, nil
 }

@@ -10,6 +10,51 @@
     "host": "localhost:8000",
     "basePath": "/",
     "paths": {
+        "/api/v1/accounts/:id": {
+            "get": {
+                "description": "get account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account"
+                ],
+                "summary": "getAccount",
+                "operationId": "get-account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.GetAccountDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/accounts/login": {
             "post": {
                 "description": "login",
@@ -67,7 +112,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "register"
+                    "account"
                 ],
                 "summary": "Register",
                 "operationId": "create-account",
@@ -121,7 +166,15 @@
                 "tags": [
                     "notes"
                 ],
-                "summary": "Get all notes from user",
+                "summary": "Get all notes from user filter by tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "notes search by tag",
+                        "name": "tag",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -200,55 +253,6 @@
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    },
-                    "default": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/notes/search": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "search note",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "search"
-                ],
-                "summary": "Search Note",
-                "operationId": "search-note",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "notes search by tag",
-                        "name": "tag",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/note.GetAllNotesDTO"
                         }
                     },
                     "500": {
@@ -851,6 +855,20 @@
         }
     },
     "definitions": {
+        "account.GetAccountDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "account.LoginAccountDTO": {
             "type": "object",
             "properties": {

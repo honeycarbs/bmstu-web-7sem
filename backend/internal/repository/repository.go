@@ -11,7 +11,8 @@ import (
 
 type Account interface {
 	CreateAccount(a *account.Account) error
-	GetAccount(a *account.Account) error
+	AuthorizeAccount(a *account.Account) error
+	GetOne(userID int) (account.Account, error)
 }
 
 type Note interface {

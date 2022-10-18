@@ -50,3 +50,11 @@ func (m *mapper) MapAccountWithTokenDTO(token string, a account.Account) account
 		Email:    a.Email,
 	}
 }
+
+func (m *mapper) MapAccountDTO(a account.Account) account.GetAccountDTO {
+	return account.GetAccountDTO{
+		Name:     a.Name,
+		Username: a.Username,
+		Email:    a.Email,
+	}
+}

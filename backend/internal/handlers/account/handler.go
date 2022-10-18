@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
 	"neatly/internal/model/account"
 	"neatly/internal/service"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -35,15 +37,20 @@ func (h *Handler) Register(router *gin.Engine) {
 
 	h.logger.Tracef("Register route: %v", groupName)
 
-	group := router.Group(groupName)
+	auth := router.Group(groupName)
 	{
-		group.POST(registerURL, h.register)
-		group.POST(loginURL, h.login)
+		auth.POST(registerURL, h.register)
+		auth.POST(loginURL, h.login)
+	}
+
+	accounts := router.Group(groupName, middleware.Authenticate)
+	{
+		accounts.GET("/:id", h.getAccount)
 	}
 }
 
 // @Summary Register
-// @Tags register
+// @Tags account
 // @Description create account
 // @ID create-account
 // @Accept  json
@@ -79,7 +86,55 @@ func (h *Handler) register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Writer.WriteHeader(http.StatusCreated)
+	ctx.JSON(http.StatusCreated, fmt.Sprintf(
+		"%v/v%v%v/%v",
+		apiURLGroup,
+		apiVersion,
+		accountsURLGroup,
+		a.ID,
+	))
+}
+
+// @Summary getAccount
+// @Tags account
+// @Description get account
+// @ID get-account
+// @Accept  json
+// @Produce  json
+// @Param id   path  string  true  "id"
+// @Success 200 {object} account.GetAccountDTO
+// @Failure 500 {object} e.ErrorResponse
+// @Failure default {object} e.ErrorResponse
+// @Router /api/v1/accounts/:id [get]
+func (h *Handler) getAccount(ctx *gin.Context) {
+	fromTokenID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	h.logger.Info(fromTokenID)
+
+	fromUrlID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		h.logger.Info("error while getting id from request")
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	h.logger.Info(fromUrlID)
+
+	if fromUrlID != fromTokenID {
+		e.NewErrorResponse(ctx, http.StatusForbidden, err)
+		return
+	}
+
+	a, err := h.service.GetOne(fromUrlID)
+	if err != nil {
+		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	dto := h.mapper.MapAccountDTO(a)
+	ctx.JSON(http.StatusOK, dto)
 }
 
 // @Summary Login

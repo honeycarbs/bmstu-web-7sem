@@ -14,6 +14,7 @@ type Account interface {
 	MapRegisterAccountDTO(dto account.RegisterAccountDTO) (account.Account, error)
 	MapLogInAccountDTO(dto account.LoginAccountDTO) account.Account
 	MapAccountWithTokenDTO(token string, a account.Account) account.WithTokenDTO
+	MapAccountDTO(a account.Account) account.GetAccountDTO
 }
 
 type Note interface {

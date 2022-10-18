@@ -14,6 +14,7 @@ import (
 type Account interface {
 	CreateAccount(u *account.Account) error
 	GenerateJWT(u *account.Account) (string, error)
+	GetOne(userID int) (account.Account, error)
 }
 
 type Note interface {

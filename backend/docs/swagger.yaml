@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  account.GetAccountDTO:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
   account.LoginAccountDTO:
     properties:
       password:
@@ -132,6 +141,36 @@ info:
   title: Neat.ly API
   version: "1.0"
 paths:
+  /api/v1/accounts/:id:
+    get:
+      consumes:
+      - application/json
+      description: get account
+      operationId: get-account
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.GetAccountDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+      summary: getAccount
+      tags:
+      - account
   /api/v1/accounts/login:
     post:
       consumes:
@@ -162,15 +201,15 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       summary: Login
       tags:
-      - accounts
+      - account
   /api/v1/accounts/register:
     post:
       consumes:
       - application/json
-      description: create accounts
-      operationId: create-accounts
+      description: create account
+      operationId: create-account
       parameters:
-      - description: accounts info
+      - description: account info
         in: body
         name: dto
         required: true
@@ -193,12 +232,17 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       summary: Register
       tags:
-      - register
+      - account
   /api/v1/notes:
     get:
       consumes:
       - application/json
       description: create note
+      parameters:
+      - description: notes search by tag
+        in: query
+        name: tag
+        type: string
       produces:
       - application/json
       responses:
@@ -224,7 +268,7 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Get all notes from user
+      summary: Get all notes from user filter by tag
       tags:
       - notes
     post:
@@ -445,37 +489,6 @@ paths:
       summary: Create tag
       tags:
       - tags
-  /api/v1/notes/search:
-    get:
-      consumes:
-      - application/json
-      description: search note
-      operationId: search-note
-      parameters:
-      - description: notes search by tag
-        in: query
-        name: tag
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/note.GetAllNotesDTO'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Search Note
-      tags:
-      - search
   /api/v1/tags:
     get:
       consumes:

@@ -14,6 +14,12 @@ func (a *AccountNotFoundErr) Error() string {
 
 type CanNotLoginErr struct{}
 
+type CanNotGetErr struct{}
+
+func (a *CanNotGetErr) Error() string {
+	return "can't get account"
+}
+
 func (a *CanNotLoginErr) Error() string {
 	return "can't login"
 }

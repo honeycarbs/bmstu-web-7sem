@@ -28,7 +28,7 @@ func (s *Service) CreateAccount(a *account.Account) error {
 }
 
 func (s *Service) GenerateJWT(a *account.Account) (string, error) {
-	err := s.repository.GetAccount(a)
+	err := s.repository.AuthorizeAccount(a)
 	logging.GetLogger().Info(a.ID, a.Name, a.Email)
 
 	err = a.CheckPassword(a.Password)
@@ -42,4 +42,11 @@ func (s *Service) GenerateJWT(a *account.Account) (string, error) {
 	}
 
 	return token, nil
+}
+
+func (s *Service) GetOne(userID int) (account.Account, error) {
+	a, err := s.repository.GetOne(userID)
+	logging.GetLogger().Info(a.ID, a.Name, a.Email)
+
+	return a, err
 }
