@@ -65,6 +65,7 @@ func (r *NotePostgres) Create(userID int, n *note.Note) error {
 
 func (r *NotePostgres) GetAll(userID int) ([]note.Note, error) {
 	var notes []note.Note
+	notes = make([]note.Note, 0)
 
 	getNotesQuery := fmt.Sprintf(
 		`SELECT n.id, n.header, n.short_body, n.color, n.edited FROM %s n

@@ -1,17 +1,27 @@
 version: "3.8"
 
 services:
-  backend:
+  backend: &backend
     build:
       context: ./backend
-    container_name: neatly-backend
     command: ./app
     ports:
-      - 8000:8000
+      - 8001:8000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - neatly-postgres
+
+  backend2:
+    <<: *backend
+    ports:
+      - 8002:8000
+
+  backend3:
+    <<: *backend
+    ports:
+      - 8003:8000
+
 
   neatly-postgres:
     image: postgres:alpine
@@ -33,6 +43,8 @@ services:
     restart: always
     links:
       - "backend:backend"
+      - "backend2:backend2"
+      - "backend3:backend3"
       - "pgadmin:pgadmin"
 
   pgadmin:

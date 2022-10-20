@@ -86,6 +86,7 @@ func (r *TagPostgres) Assign(tagID, noteID, userID int) error {
 
 func (r *TagPostgres) GetAll(userID int) ([]tag.Tag, error) {
 	var tags []tag.Tag
+	tags = make([]tag.Tag, 0)
 
 	query := fmt.Sprintf(`SELECT tags_id AS id, name, color FROM
 								%s t INNER JOIN %s ut ON ut.tags_id = t.id  WHERE
@@ -100,6 +101,7 @@ func (r *TagPostgres) GetAll(userID int) ([]tag.Tag, error) {
 
 func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]tag.Tag, error) {
 	var tags []tag.Tag
+	tags = make([]tag.Tag, 0)
 
 	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
     							INNER JOIN %s ut ON ut.tags_id = t.id
