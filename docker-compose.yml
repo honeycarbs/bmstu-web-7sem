@@ -12,10 +12,9 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - neatly-postgres
-      - nginx
 
   neatly-postgres:
-    image: postgres:latest
+    image: postgres:alpine
     ports:
       - 5432:5432
     environment:
@@ -29,6 +28,18 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./backend/etc/nginx/static/:/usr/share/nginx/html/
+      - ./backend/etc/nginx/static:/usr/share/nginx/static
       - ./backend/etc/nginx/conf.d/:/etc/nginx/conf.d/
     restart: always
+    links:
+      - "backend:backend"
+      - "pgadmin:pgadmin"
+
+  pgadmin:
+    image: 'dpage/pgadmin4'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=SuperSecret
+      - traefik.frontend.pgadmin4.rule=Host(`host.example.com`) && PathPrefix(`/pgadmin4`)
+    ports:
+      - 8090:80
