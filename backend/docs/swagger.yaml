@@ -133,7 +133,7 @@ definitions:
       name:
         type: string
     type: object
-host: localhost:8000
+host: localhost:8080
 info:
   contact: {}
   description: API Server for notes-taking applications
@@ -489,50 +489,6 @@ paths:
       summary: Create tag
       tags:
       - tags
-  /api/v1/notes/{id}/tags/{tag_id}:
-    delete:
-      consumes:
-      - application/json
-      description: detach tag by ID from note by ID
-      parameters:
-      - description: id
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: tag id
-        in: path
-        name: tag_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: integer
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/e.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Detach tag by ID from note by ID
-      tags:
-      - tags
   /api/v1/tags:
     get:
       consumes:
@@ -683,6 +639,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update tag by ID
+      tags:
+      - tags
+  /api/v1/tags/{id}/tags/{tag_id}:
+    delete:
+      consumes:
+      - application/json
+      description: detach tag by ID from note by ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: tag id
+        in: path
+        name: tag_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Detach tag by ID from note by ID
       tags:
       - tags
 securityDefinitions:

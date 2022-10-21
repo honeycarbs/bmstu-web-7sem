@@ -1,18 +1,21 @@
-FROM golang:1.18.4-alpine3.16 AS builder
+FROM golang:1.18.4-alpine3.16
 
-COPY . /backend/
-WORKDIR /backend/
 
+RUN go version
+ENV GOPATH=/
+
+COPY ./ ./
+
+# install psql
+RUN apk update
+RUN apk add postgresql-client
+
+# make wait-for-postgres.sh executable
+RUN chmod +x wait-for-postgres.sh
+
+# build go app
 RUN go mod download
-RUN go build -o ./build/app cmd/main/main.go
+RUN go build -o app ./cmd/main/main.go
 
-FROM alpine:latest
 
-WORKDIR /root/
-
-COPY --from=0 /backend/build/app .
-COPY --from=0 /backend/etc/ etc/
-
-EXPOSE 8000
-
-CMD ["./app"]
+ENTRYPOINT [ "./app" ]

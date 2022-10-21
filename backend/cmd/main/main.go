@@ -24,7 +24,7 @@ import (
 // @description API Server for notes-taking applications
 // @termsOfService  http://swagger.io/terms/
 
-// @host localhost:8000
+// @host localhost:8080
 // @BasePath /
 
 // @securityDefinitions.apikey ApiKeyAuth

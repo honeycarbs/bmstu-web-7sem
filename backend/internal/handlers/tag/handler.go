@@ -3,7 +3,6 @@ package tag
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
 	"neatly/internal/model/note"
@@ -13,6 +12,8 @@ import (
 	"neatly/pkg/logging"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
