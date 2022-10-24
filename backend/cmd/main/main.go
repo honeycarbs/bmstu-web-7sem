@@ -1,7 +1,13 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"neatly/cmd/server"
+	"neatly/docs"
 	_ "neatly/docs"
 	"neatly/internal/handlers/account"
 	"neatly/internal/handlers/note"
@@ -12,11 +18,7 @@ import (
 	"neatly/internal/session"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"os"
 )
 
 // @title Neat.ly API
@@ -24,7 +26,6 @@ import (
 // @description API Server for notes-taking applications
 // @termsOfService  http://swagger.io/terms/
 
-// @host localhost:8080
 // @BasePath /
 
 // @securityDefinitions.apikey ApiKeyAuth
@@ -34,6 +35,7 @@ func main() {
 	logging.Init()
 	logger := logging.GetLogger()
 
+	os.Setenv("ENV_FILE", os.Args[1])
 	cfg := session.GetConfig()
 
 	client, err := psqlclient.NewClient(cfg.DB)
@@ -43,6 +45,12 @@ func main() {
 
 	logger.Info("Create new gin router")
 	router := gin.New()
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	router.Use(cors.New(config))
+
+	docs.SwaggerInfo.Host = cfg.Swagger.Host
 
 	router.GET("api/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

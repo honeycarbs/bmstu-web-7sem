@@ -3,11 +3,8 @@ package session
 import (
 	"github.com/ilyakaznacheev/cleanenv"
 	"neatly/pkg/logging"
+	"os"
 	"sync"
-)
-
-const (
-	confPath = "etc/config/config.yml"
 )
 
 type DB struct {
@@ -29,11 +26,16 @@ type JWT struct {
 	Secret string `yaml:"secret"`
 }
 
+type Swagger struct {
+	Host string `yaml:"host"`
+}
+
 type Config struct {
-	IsDebug *bool  `yaml:"is_debug"`
-	DB      DB     `yaml:"db"`
-	Listen  Listen `yaml:"listen"`
-	JWT     JWT    `yaml:"jwt"`
+	IsDebug *bool   `yaml:"is_debug"`
+	DB      DB      `yaml:"db"`
+	Listen  Listen  `yaml:"listen"`
+	JWT     JWT     `yaml:"jwt"`
+	Swagger Swagger `yaml:"swagger"`
 }
 
 var instance *Config
@@ -42,9 +44,9 @@ var once sync.Once
 func GetConfig() *Config {
 	once.Do(func() {
 		logger := logging.GetLogger()
-		logger.Info("Reading application config")
+		logger.Infof("Reading application config from %v", os.Getenv("ENV_FILE"))
 		instance = &Config{}
-		if err := cleanenv.ReadConfig(confPath, instance); err != nil {
+		if err := cleanenv.ReadConfig(os.Getenv("ENV_FILE"), instance); err != nil {
 			help, _ := cleanenv.GetDescription(instance, nil)
 			logger.Info(help)
 			logger.Fatal(err)

@@ -14,4 +14,4 @@ db:
 jwt:
   secret: "$ecr3t"
 swagger:
-  host: "localhost:8080"
+  host: "localhost:8084"
