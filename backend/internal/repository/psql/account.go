@@ -24,7 +24,6 @@ func (r *AuthPostgres) CreateAccount(a *model.Account) error {
               (name, username, email, password_hash)
               VALUES ($1, $2, $3, $4) RETURNING id`
 
-	r.logger.Info("Creating accounts")
 	row := r.db.QueryRow(query, a.Name, a.Username, a.Email, a.PasswordHash)
 	if err := row.Scan(&a.ID); err != nil {
 		return err

@@ -41,7 +41,5 @@ func (s *Service) GenerateJWT(a *model.Account) (string, error) {
 
 func (s *Service) GetOne(userID int) (model.Account, error) {
 	a, err := s.repository.GetOne(userID)
-	s.logger.Info(a.ID, a.Name, a.Email)
-
 	return a, err
 }
