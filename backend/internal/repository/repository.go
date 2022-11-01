@@ -7,6 +7,8 @@ import (
 	"neatly/pkg/logging"
 )
 
+//go:generate mockgen -destination=mock/$GOFILE -package=mock -source=$GOFILE
+
 type AccountRepository interface {
 	CreateAccount(a *model.Account) error
 	AuthorizeAccount(a *model.Account) error

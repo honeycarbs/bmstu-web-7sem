@@ -8,19 +8,19 @@ import (
 	"neatly/pkg/logging"
 )
 
-type AuthPostgres struct {
+type AccountPostgres struct {
 	db     *sqlx.DB
 	logger logging.Logger
 }
 
-func NewAccountPostgres(client *psqlclient.Client, logger logging.Logger) *AuthPostgres {
-	return &AuthPostgres{
+func NewAccountPostgres(client *psqlclient.Client, logger logging.Logger) *AccountPostgres {
+	return &AccountPostgres{
 		db:     client.DB,
 		logger: logger,
 	}
 }
 
-func (r *AuthPostgres) CreateAccount(a *model.Account) error {
+func (r *AccountPostgres) CreateAccount(a *model.Account) error {
 	query := `INSERT INTO users
               (name, username, email, password_hash)
               VALUES ($1, $2, $3, $4) RETURNING id`
@@ -33,7 +33,7 @@ func (r *AuthPostgres) CreateAccount(a *model.Account) error {
 	return nil
 }
 
-func (r *AuthPostgres) AuthorizeAccount(a *model.Account) error {
+func (r *AccountPostgres) AuthorizeAccount(a *model.Account) error {
 	query := `SELECT id, name, username, password_hash, email
 			  FROM users WHERE username=$1`
 
@@ -45,7 +45,7 @@ func (r *AuthPostgres) AuthorizeAccount(a *model.Account) error {
 	return nil
 }
 
-func (r *AuthPostgres) GetOne(userID int) (model.Account, error) {
+func (r *AccountPostgres) GetOne(userID int) (model.Account, error) {
 	query := `SELECT id, name, username, email FROM
               users WHERE id=$1`
 
