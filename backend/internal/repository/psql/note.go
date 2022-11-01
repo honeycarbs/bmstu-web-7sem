@@ -1,18 +1,13 @@
 package psql
 
 import (
-	"fmt"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
 	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"time"
-)
-
-const (
-	notesTable      = "notes"
-	notesBodyTable  = "notes_body"
-	usersNotesTable = "users_notes"
 )
 
 type NotePostgres struct {
@@ -33,23 +28,23 @@ func (r *NotePostgres) Create(userID int, n *model.Note) error {
 		return err
 	}
 
-	createNoteQuery := fmt.Sprintf(`
-	INSERT INTO %s (header, short_body, color, edited)
-	VALUES ($1, $2, $3, $4) RETURNING id`, notesTable)
+	createNoteQuery := `INSERT INTO notes (header, short_body, color, edited)
+						VALUES ($1, $2, $3, $4) RETURNING id`
+
 	row := tx.QueryRow(createNoteQuery, n.Header, n.ShortBody, n.Color, time.Now())
 	if err := row.Scan(&n.ID); err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
 		return err
 	}
-	createNoteBodyQuery := fmt.Sprintf("INSERT INTO %s (id, body) VALUES ($1, $2)", notesBodyTable)
+	createNoteBodyQuery := `INSERT INTO notes_body (id, body) VALUES ($1, $2)`
 	_, err = tx.Exec(createNoteBodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
 		return err
 	}
-	createUsersNoteQuery := fmt.Sprintf("INSERT INTO %s (users_id, notes_id) VALUES ($1, $2)", usersNotesTable)
+	createUsersNoteQuery := `INSERT INTO users_notes (users_id, notes_id) VALUES ($1, $2)`
 	_, err = tx.Exec(createUsersNoteQuery, userID, n.ID)
 	if err != nil {
 		tx.Rollback()
@@ -64,13 +59,9 @@ func (r *NotePostgres) GetAll(userID int) ([]model.Note, error) {
 	var notes []model.Note
 	notes = make([]model.Note, 0)
 
-	getNotesQuery := fmt.Sprintf(
-		`SELECT n.id, n.header, n.short_body, n.color, n.edited FROM %s n
-    			JOIN %s un ON n.id = un.notes_id
-    			WHERE un.users_id = $1`,
-		notesTable,
-		usersNotesTable,
-	)
+	getNotesQuery := `SELECT n.id, n.header, n.short_body, n.color, n.edited FROM notes n
+    			      JOIN users_notes un ON n.id = un.notes_id
+    			      WHERE un.users_id = $1`
 
 	err := r.db.Select(&notes, getNotesQuery, userID)
 	if err != nil {
@@ -88,27 +79,21 @@ func (r *NotePostgres) GetOne(userID, noteID int) (model.Note, error) {
 	}
 	var n model.Note
 
-	selectNoteQuery := fmt.Sprintf(
-		`SELECT n.id, n.header, n.short_body, n.color, n.edited FROM
-				%s n JOIN %s un ON n.id = un.notes_id
-				WHERE un.users_id = $1 AND un.notes_id = $2`,
-		notesTable,
-		usersNotesTable,
-	)
+	selectNoteQuery := `SELECT n.id, n.header, n.short_body, n.color, n.edited FROM
+				        notes n JOIN users_notes un ON n.id = un.notes_id
+				        WHERE un.users_id = $1 AND un.notes_id = $2`
 
 	err = r.db.Get(&n, selectNoteQuery, userID, noteID)
 	if err != nil {
 		tx.Rollback()
-		r.logger.Info(err)
-		return model.Note{}, err
+		r.logger.Infof("Internal error: %v", err.Error())
+		if err == sql.ErrNoRows {
+			return n, e.ClientNoteError
+		}
 	}
 
-	selectBodyQuery := fmt.Sprintf(
-		`SELECT nb.body FROM %s nb JOIN %s n ON nb.id = n.id
-				WHERE n.id = $1`,
-		notesBodyTable,
-		notesTable,
-	)
+	selectBodyQuery := `SELECT nb.body FROM notes_body nb JOIN notes n ON nb.id = n.id
+				        WHERE n.id = $1`
 
 	err = r.db.Get(&n.Body, selectBodyQuery, noteID)
 	if err != nil {
@@ -120,10 +105,8 @@ func (r *NotePostgres) GetOne(userID, noteID int) (model.Note, error) {
 }
 
 func (r *NotePostgres) Delete(userID, noteID int) error {
-	query := fmt.Sprintf(
-		`DELETE FROM %s n USING %s un WHERE 
-              n.id = un.notes_id AND un.users_id = $1 AND un.notes_id = $2`,
-		notesTable, usersNotesTable)
+	query := `DELETE FROM notes n USING users_notes un WHERE 
+              n.id = un.notes_id AND un.users_id = $1 AND un.notes_id = $2`
 	_, err := r.db.Exec(query, userID, noteID)
 
 	return err
@@ -134,12 +117,10 @@ func (r *NotePostgres) Update(userID int, n model.Note) error {
 	if err != nil {
 		return err
 	}
-	noteQuery := fmt.Sprintf(
-		`UPDATE %s n SET 
-                header=$1, short_body=$2, color = $3, edited=$4 FROM
-                %s un WHERE n.id = un.notes_id AND 
-				un.notes_id = $5 AND un.users_id = $6`,
-		notesTable, usersNotesTable)
+	noteQuery := `UPDATE notes n SET 
+                  header=$1, short_body=$2, color = $3, edited=$4 FROM
+                  users_notes un WHERE n.id = un.notes_id AND 
+				  un.notes_id = $5 AND un.users_id = $6`
 	_, err = r.db.Exec(
 		noteQuery,
 		n.Header,
@@ -154,9 +135,7 @@ func (r *NotePostgres) Update(userID int, n model.Note) error {
 		return err
 	}
 
-	bodyQuery := fmt.Sprintf(
-		`UPDATE %s nb SET body=$2 WHERE nb.id = $1`,
-		notesBodyTable)
+	bodyQuery := `UPDATE notes_body nb SET body=$2 WHERE nb.id = $1`
 	_, err = r.db.Exec(bodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()

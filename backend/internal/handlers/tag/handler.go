@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"errors"
 	"fmt"
 	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
@@ -98,7 +99,11 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	err = h.service.Create(userID, noteID, &t)
 
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientTagError) || errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -205,8 +210,11 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 	t, err := h.service.GetOne(userID, tagID)
 
 	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientTagError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -251,8 +259,11 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	t := h.mapper.MapUpdateTagDTO(updateTagDTO)
 	err = h.service.Update(userID, tagID, t)
 	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientTagError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -288,8 +299,11 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 	err = h.service.Delete(userID, tagID)
 
 	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientTagError) || errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -333,8 +347,11 @@ func (h *Handler) detachTag(ctx *gin.Context) {
 	err = h.service.Detach(userID, tagID, noteID)
 
 	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientTagError) || errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 

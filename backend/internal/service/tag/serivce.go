@@ -1,9 +1,9 @@
 package tag
 
 import (
-	"errors"
 	"neatly/internal/model"
 	"neatly/internal/repository"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"strings"
 )
@@ -21,7 +21,7 @@ func NewService(tagsRepository *repository.TagRepositoryImpl, notesRepository *r
 func (s *Service) Create(userID, noteID int, t *model.Tag) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exist or does not belong to accounts")
+		return e.ClientNoteError
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)
@@ -74,7 +74,7 @@ func (s *Service) Delete(userID, tagID int) error {
 func (s *Service) Update(userID, tagID int, t model.Tag) error {
 	tp, err := s.tagsRepository.GetOne(userID, tagID)
 	if err != nil {
-		return err
+		return e.ClientTagError
 	}
 
 	if t.Color == "" {
@@ -90,7 +90,7 @@ func (s *Service) Update(userID, tagID int, t model.Tag) error {
 func (s *Service) Detach(userID, tagID, noteID int) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exist or does not belong to user")
+		return e.ClientNoteError
 	}
 
 	ns, err := s.notesRepository.GetAll(userID)
@@ -99,7 +99,6 @@ func (s *Service) Detach(userID, tagID, noteID int) error {
 	}
 
 	t, err := s.tagsRepository.GetOne(userID, tagID)
-	s.logger.Infof("Found tag %v: %v, %v", tagID, t.Name, t.Color)
 	if err != nil {
 		return err
 	}

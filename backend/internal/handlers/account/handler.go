@@ -1,6 +1,7 @@
 package account
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"neatly/internal/handlers/middleware"
@@ -58,6 +59,7 @@ func (h *Handler) Register(router *gin.Engine) {
 // @Param dto body dto.RegisterAccountDTO true "account info"
 // @Success 201 {string} string 1
 // @Failure 500 {object} e.ErrorResponse
+// @Failure 409 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/register [post]
 func (h *Handler) register(ctx *gin.Context) {
@@ -82,7 +84,11 @@ func (h *Handler) register(ctx *gin.Context) {
 
 	err = h.service.CreateAccount(&a)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientAccountError) {
+			e.NewErrorResponse(ctx, http.StatusConflict, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -105,6 +111,7 @@ func (h *Handler) register(ctx *gin.Context) {
 // @Param id   path  string  true  "id"
 // @Success 200 {object} dto.GetAccountDTO
 // @Failure 500 {object} e.ErrorResponse
+// @Failure 403 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/{id} [get]
 func (h *Handler) getAccount(ctx *gin.Context) {
@@ -124,7 +131,7 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 	h.logger.Info(fromUrlID)
 
 	if fromUrlID != fromTokenID {
-		e.NewErrorResponse(ctx, http.StatusForbidden, err)
+		e.NewErrorResponse(ctx, http.StatusForbidden, errors.New("permission denied"))
 		return
 	}
 

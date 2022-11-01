@@ -2,6 +2,7 @@ package note
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -139,6 +140,7 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 // @Param   id  path  string  true  "id"
 // @Success 200 {object} model.Note
 // @Failure 500 {object} e.ErrorResponse
+// @Failure 404 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/notes/{id} [get]
 func (h *Handler) getOneNote(ctx *gin.Context) {
@@ -157,7 +159,11 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 
 	n, err := h.service.GetOne(userID, noteID)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -224,8 +230,11 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	err = h.service.Update(userID, n, needBodyUpdate)
 
 	if err != nil {
-		h.logger.Info(err)
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -260,7 +269,11 @@ func (h *Handler) deleteNote(ctx *gin.Context) {
 
 	err = h.service.Delete(userID, noteID)
 	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, e.ClientNoteError) {
+			e.NewErrorResponse(ctx, http.StatusNotFound, err)
+		} else {
+			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 

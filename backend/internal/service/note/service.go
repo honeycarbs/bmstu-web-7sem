@@ -1,9 +1,9 @@
 package note
 
 import (
-	"errors"
 	"neatly/internal/model"
 	"neatly/internal/repository"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 )
 
@@ -62,7 +62,7 @@ func (s *Service) GetOne(userID, noteID int) (model.Note, error) {
 func (s *Service) Delete(userID, noteID int) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to user")
+		return e.ClientNoteError
 	}
 	return s.notesRepository.Delete(userID, noteID)
 }
@@ -70,7 +70,7 @@ func (s *Service) Delete(userID, noteID int) error {
 func (s *Service) Update(userID int, n model.Note, needBodyUpdate bool) error {
 	prev, err := s.notesRepository.GetOne(userID, n.ID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to user")
+		return e.ClientNoteError
 	}
 	if n.Header == "" {
 		n.Header = prev.Header

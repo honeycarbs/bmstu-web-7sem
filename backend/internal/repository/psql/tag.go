@@ -1,17 +1,12 @@
 package psql
 
 import (
-	"fmt"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
 	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
-)
-
-const (
-	tagsTable      = "tags"
-	notesTagsTable = "tags_notes"
-	usersTagsTable = "users_tags"
 )
 
 type TagPostgres struct {
@@ -30,9 +25,7 @@ func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 		return err
 	}
 
-	createTagQuery := fmt.Sprintf(
-		`INSERT INTO %s AS t (name, color) VALUES ($1, $2) RETURNING id`,
-		tagsTable)
+	createTagQuery := `INSERT INTO tags AS t (name, color) VALUES ($1, $2) RETURNING id`
 
 	r.logger.Infof("Tag with id %v created", t.ID)
 
@@ -44,14 +37,10 @@ func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 	}
 
 	r.logger.Infof("Connecting tag with id %v and accounts with id with id %v", t.ID, userID)
-	userTagQuery := fmt.Sprintf(
-		`INSERT INTO %s
-    			(users_id, tags_id)
-				SELECT $1, $2
-				WHERE
-    			NOT EXISTS (
+	userTagQuery := `INSERT INTO users_tags (users_id, tags_id)
+				SELECT $1, $2 WHERE NOT EXISTS (
     			    SELECT users_id, tags_id FROM users_tags WHERE users_id = $1 AND tags_id = $2
-    			);`, usersTagsTable)
+    			)`
 	_, err = tx.Exec(userTagQuery, userID, t.ID)
 	if err != nil {
 		return err
@@ -61,11 +50,13 @@ func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 
 func (r *TagPostgres) Assign(tagID, noteID, userID int) error {
 	r.logger.Infof("Assigning tag with id %v to note with id with id %v", tagID, noteID)
-	assignTagQuery := fmt.Sprintf(
-		`INSERT INTO %s (notes_id, tags_id) VALUES ($1, $2)`, notesTagsTable)
+	assignTagQuery := `INSERT INTO tags_notes (notes_id, tags_id) VALUES ($1, $2)`
 	_, err := r.db.Exec(assignTagQuery, noteID, tagID)
 	if err != nil {
-		r.logger.Info(err)
+		r.logger.Infof("Internal error: %v", err.Error())
+		if err == sql.ErrNoRows {
+			return e.ClientNoteError
+		}
 		return err
 	}
 
@@ -76,9 +67,9 @@ func (r *TagPostgres) GetAll(userID int) ([]model.Tag, error) {
 	var tags []model.Tag
 	tags = make([]model.Tag, 0)
 
-	query := fmt.Sprintf(`SELECT tags_id AS id, name, color FROM
-								%s t INNER JOIN %s ut ON ut.tags_id = t.id  WHERE
-								ut.users_id = $1`, tagsTable, usersTagsTable)
+	query := `SELECT tags_id AS id, name, color FROM
+			  tags t JOIN users_tags ut ON ut.tags_id = t.id  WHERE
+			  ut.users_id = $1`
 
 	err := r.db.Select(&tags, query, userID)
 	if err != nil {
@@ -91,11 +82,10 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
 	var tags []model.Tag
 	tags = make([]model.Tag, 0)
 
-	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
-    							INNER JOIN %s ut ON ut.tags_id = t.id
-    							INNER JOIN %s nt on t.id = nt.tags_id
-    							WHERE users_id = $1 AND notes_id = $2`,
-		tagsTable, usersTagsTable, notesTagsTable)
+	query := `SELECT t.id AS id, name, color FROM tags t
+    		  JOIN users_tags ut ON ut.tags_id = t.id
+    		  JOIN tags_notes nt on t.id = nt.tags_id
+    		  WHERE users_id = $1 AND notes_id = $2`
 
 	err := r.db.Select(&tags, query, userID, noteID)
 	if err != nil {
@@ -107,44 +97,40 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
 func (r *TagPostgres) GetOne(userID, tagID int) (model.Tag, error) {
 	var t model.Tag
 
-	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
-    							INNER JOIN %s ut ON ut.tags_id = t.id
-    							INNER JOIN %s nt on t.id = nt.tags_id
-    							WHERE users_id = $1 AND t.id = $2`,
-		tagsTable, usersTagsTable, notesTagsTable)
+	query := `SELECT t.id AS id, name, color FROM tags t
+    		  JOIN users_tags ut ON ut.tags_id = t.id
+    		  JOIN tags_notes nt on t.id = nt.tags_id
+    		  WHERE users_id = $1 AND t.id = $2`
 
 	err := r.db.Get(&t, query, userID, tagID)
-
-	return t, err
+	if err != nil {
+		r.logger.Infof("Internal error: %v", err.Error())
+		if err == sql.ErrNoRows {
+			return t, e.ClientTagError
+		}
+	}
+	return t, nil
 }
 
 func (r *TagPostgres) Delete(userID, tagID int) error {
-	query := fmt.Sprintf(
-		`DELETE FROM %s t USING %s ut WHERE 
-              t.id = ut.tags_id AND ut.users_id = $1 AND ut.tags_id = $2`,
-		tagsTable, usersTagsTable)
+	query := `DELETE FROM tags t USING users_tags ut WHERE 
+              t.id = ut.tags_id AND ut.users_id = $1 AND ut.tags_id = $2`
 	_, err := r.db.Exec(query, userID, tagID)
 
 	return err
 }
 
 func (r *TagPostgres) Update(userID, tagID int, t model.Tag) error {
-	query := fmt.Sprintf(
-		`UPDATE %s t SET 
-                name=$1, color=$2 FROM
-                %s ut WHERE t.id = ut.tags_id AND 
-				ut.tags_id = $3 AND ut.users_id = $4`,
-		tagsTable, usersTagsTable)
+	query := `UPDATE tags t SET name=$1, color=$2 FROM users_tags ut
+              WHERE t.id = ut.tags_id AND ut.tags_id = $3 AND ut.users_id = $4`
 	_, err := r.db.Exec(query, t.Name, t.Color, tagID, userID)
 
 	return err
 }
 
 func (r *TagPostgres) Detach(userID, tagID, noteID int) error {
-	query := fmt.Sprintf(
-		`DELETE FROM %s USING %s ut WHERE
-            	tags_notes.tags_id = ut.tags_id AND ut.users_id = $1 AND ut.tags_id = $2 AND notes_id = $3`,
-		notesTagsTable, usersTagsTable)
+	query := `DELETE FROM tags_notes USING users_tags ut WHERE
+              tags_notes.tags_id = ut.tags_id AND ut.users_id = $1 AND ut.tags_id = $2 AND notes_id = $3`
 	_, err := r.db.Exec(query, userID, tagID, noteID)
 
 	return err

@@ -2,6 +2,7 @@ package psql
 
 import (
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"neatly/internal/model"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
@@ -26,7 +27,8 @@ func (r *AuthPostgres) CreateAccount(a *model.Account) error {
 
 	row := r.db.QueryRow(query, a.Name, a.Username, a.Email, a.PasswordHash)
 	if err := row.Scan(&a.ID); err != nil {
-		return err
+		r.logger.Infof("Internal error: %v", err.Error())
+		return ParsePsqlError(err.(*pq.Error))
 	}
 	return nil
 }
