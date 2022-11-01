@@ -63,7 +63,7 @@ func (h *Handler) Register(router *gin.Engine) {
 // @Accept  json
 // @Produce  json
 // @Param   id  path  string  true  "id"
-// @Param dto body tag.CreateTagDTO true "tag info"
+// @Param dto body dto.CreateTagDTO true "tag info"
 // @Success 201 {string} string 1
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
@@ -84,17 +84,17 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	}
 
 	var (
-		dto dto.CreateTagDTO
-		t   model.Tag
+		createTagDTO dto.CreateTagDTO
+		t            model.Tag
 	)
 
-	if err := ctx.BindJSON(&dto); err != nil {
+	if err := ctx.BindJSON(&createTagDTO); err != nil {
 		h.logger.Info(err)
 		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	t = h.mapper.MapCreateTagDTO(dto)
+	t = h.mapper.MapCreateTagDTO(createTagDTO)
 	err = h.service.Create(userID, noteID, &t)
 
 	if err != nil {
@@ -113,7 +113,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   id  path  string  true  "id"
-// @Success 200 {object} tag.GetAllTagsDTO
+// @Success 200 {object} dto.GetAllTagsDTO
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
@@ -151,7 +151,7 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 // @Description get tags from user
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} tag.GetAllTagsDTO
+// @Success 200 {object} dto.GetAllTagsDTO
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
@@ -183,7 +183,7 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   id  path  string  true  "id"
-// @Success 200 {object} tag.Tag
+// @Success 200 {object} model.Tag
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
@@ -220,7 +220,7 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   id  path  string  true  "id"
-// @Param dto body tag.UpdateTagDTO true "tag info"
+// @Param dto body dto.UpdateTagDTO true "tag info"
 // @Success 204
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
@@ -308,7 +308,7 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
-// @Router /api/v1/tags/{id}/tags/{tag_id} [delete]
+// @Router /api/v1/tags/{note_id}/tags/{tag_id} [delete]
 func (h *Handler) detachTag(ctx *gin.Context) {
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {

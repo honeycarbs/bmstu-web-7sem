@@ -54,7 +54,7 @@ func (h *Handler) Register(router *gin.Engine) {
 // @Description create note
 // @Accept  json
 // @Produce  json
-// @Param dto body note.CreateNoteDTO true "note content"
+// @Param dto body dto.CreateNoteDTO true "note content"
 // @Success 201 {string} string 1
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
@@ -93,7 +93,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   tag query  string  false  "notes search by tag"
-// @Success 200 {object} note.GetAllNotesDTO
+// @Success 200 {object} dto.GetAllNotesDTO
 // @Failure 500 {object}  e.ErrorResponse
 // @Failure 400,404 {object} e.ErrorResponse
 // @Failure default {object}  e.ErrorResponse
@@ -129,7 +129,7 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, allNotesDTO)
 }
 
-// @Summary Get Note By Id
+// @Summary Get Note By id
 // @Security ApiKeyAuth
 // @Tags notes
 // @Description get note by id
@@ -137,7 +137,7 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 // @Accept  json
 // @Produce json
 // @Param   id  path  string  true  "id"
-// @Success 200 {object} note.Note
+// @Success 200 {object} model.Note
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/notes/{id} [get]
@@ -172,7 +172,7 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 // @Accept  json
 // @Produce json
 // @Param   id   path  string  true  "id"
-// @Param dto body note.UpdateNoteDTO true "note content"
+// @Param dto body dto.UpdateNoteDTO true "note content"
 // @Success 204
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse

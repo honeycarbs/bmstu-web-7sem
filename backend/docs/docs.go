@@ -17,51 +17,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/accounts/:id": {
-            "get": {
-                "description": "get account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "account"
-                ],
-                "summary": "getAccount",
-                "operationId": "get-account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/account.GetAccountDTO"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    },
-                    "default": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/accounts/login": {
             "post": {
                 "description": "login",
@@ -83,7 +38,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/account.LoginAccountDTO"
+                            "$ref": "#/definitions/dto.LoginAccountDTO"
                         }
                     }
                 ],
@@ -91,7 +46,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/account.WithTokenDTO"
+                            "$ref": "#/definitions/dto.WithTokenDTO"
                         }
                     },
                     "500": {
@@ -130,7 +85,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/account.RegisterAccountDTO"
+                            "$ref": "#/definitions/dto.RegisterAccountDTO"
                         }
                     }
                 ],
@@ -139,6 +94,56 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account"
+                ],
+                "summary": "getAccount",
+                "operationId": "get-account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetAccountDTO"
                         }
                     },
                     "500": {
@@ -186,7 +191,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/note.GetAllNotesDTO"
+                            "$ref": "#/definitions/dto.GetAllNotesDTO"
                         }
                     },
                     "400": {
@@ -239,7 +244,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/note.CreateNoteDTO"
+                            "$ref": "#/definitions/dto.CreateNoteDTO"
                         }
                     }
                 ],
@@ -294,7 +299,7 @@ const docTemplate = `{
                 "tags": [
                     "notes"
                 ],
-                "summary": "Get Note By Id",
+                "summary": "Get Note By id",
                 "operationId": "get-note-by-id",
                 "parameters": [
                     {
@@ -309,7 +314,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/note.Note"
+                            "$ref": "#/definitions/model.Note"
                         }
                     },
                     "500": {
@@ -403,7 +408,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/note.UpdateNoteDTO"
+                            "$ref": "#/definitions/dto.UpdateNoteDTO"
                         }
                     }
                 ],
@@ -457,7 +462,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tag.GetAllTagsDTO"
+                            "$ref": "#/definitions/dto.GetAllTagsDTO"
                         }
                     },
                     "400": {
@@ -517,7 +522,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tag.CreateTagDTO"
+                            "$ref": "#/definitions/dto.CreateTagDTO"
                         }
                     }
                 ],
@@ -577,7 +582,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tag.GetAllTagsDTO"
+                            "$ref": "#/definitions/dto.GetAllTagsDTO"
                         }
                     },
                     "400": {
@@ -638,7 +643,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tag.Tag"
+                            "$ref": "#/definitions/model.Tag"
                         }
                     },
                     "400": {
@@ -757,7 +762,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tag.UpdateTagDTO"
+                            "$ref": "#/definitions/dto.UpdateTagDTO"
                         }
                     }
                 ],
@@ -792,7 +797,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/tags/{id}/tags/{tag_id}": {
+        "/api/v1/tags/{note_id}/tags/{tag_id}": {
             "delete": {
                 "security": [
                     {
@@ -862,7 +867,40 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "account.GetAccountDTO": {
+        "dto.CreateNoteDTO": {
+            "type": "object",
+            "required": [
+                "color",
+                "header"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "header": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateTagDTO": {
+            "type": "object",
+            "required": [
+                "color",
+                "name"
+            ],
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetAccountDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -876,7 +914,29 @@ const docTemplate = `{
                 }
             }
         },
-        "account.LoginAccountDTO": {
+        "dto.GetAllNotesDTO": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Note"
+                    }
+                }
+            }
+        },
+        "dto.GetAllTagsDTO": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
+                }
+            }
+        },
+        "dto.LoginAccountDTO": {
             "type": "object",
             "properties": {
                 "password": {
@@ -887,7 +947,7 @@ const docTemplate = `{
                 }
             }
         },
-        "account.RegisterAccountDTO": {
+        "dto.RegisterAccountDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -904,7 +964,35 @@ const docTemplate = `{
                 }
             }
         },
-        "account.WithTokenDTO": {
+        "dto.UpdateNoteDTO": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "header": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateTagDTO": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.WithTokenDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -934,36 +1022,7 @@ const docTemplate = `{
                 }
             }
         },
-        "note.CreateNoteDTO": {
-            "type": "object",
-            "required": [
-                "color",
-                "header"
-            ],
-            "properties": {
-                "body": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "header": {
-                    "type": "string"
-                }
-            }
-        },
-        "note.GetAllNotesDTO": {
-            "type": "object",
-            "properties": {
-                "notes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/note.Note"
-                    }
-                }
-            }
-        },
-        "note.Note": {
+        "model.Note": {
             "type": "object",
             "properties": {
                 "body": {
@@ -988,55 +1047,12 @@ const docTemplate = `{
                     "description": "[]tag.Tag",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/tag.Tag"
+                        "$ref": "#/definitions/model.Tag"
                     }
                 }
             }
         },
-        "note.UpdateNoteDTO": {
-            "type": "object",
-            "properties": {
-                "body": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "header": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "tag.CreateTagDTO": {
-            "type": "object",
-            "required": [
-                "color",
-                "name"
-            ],
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "tag.GetAllTagsDTO": {
-            "type": "object",
-            "properties": {
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/tag.Tag"
-                    }
-                }
-            }
-        },
-        "tag.Tag": {
+        "model.Tag": {
             "type": "object",
             "required": [
                 "color",
@@ -1048,17 +1064,6 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "tag.UpdateTagDTO": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -1078,7 +1083,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Neat.ly API",

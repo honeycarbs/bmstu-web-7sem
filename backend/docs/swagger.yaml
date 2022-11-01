@@ -1,6 +1,28 @@
 basePath: /
 definitions:
-  account.GetAccountDTO:
+  dto.CreateNoteDTO:
+    properties:
+      body:
+        type: string
+      color:
+        type: string
+      header:
+        type: string
+    required:
+    - color
+    - header
+    type: object
+  dto.CreateTagDTO:
+    properties:
+      color:
+        type: string
+      name:
+        type: string
+    required:
+    - color
+    - name
+    type: object
+  dto.GetAccountDTO:
     properties:
       email:
         type: string
@@ -9,14 +31,28 @@ definitions:
       username:
         type: string
     type: object
-  account.LoginAccountDTO:
+  dto.GetAllNotesDTO:
+    properties:
+      notes:
+        items:
+          $ref: '#/definitions/model.Note'
+        type: array
+    type: object
+  dto.GetAllTagsDTO:
+    properties:
+      tags:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+    type: object
+  dto.LoginAccountDTO:
     properties:
       password:
         type: string
       username:
         type: string
     type: object
-  account.RegisterAccountDTO:
+  dto.RegisterAccountDTO:
     properties:
       email:
         type: string
@@ -27,7 +63,25 @@ definitions:
       username:
         type: string
     type: object
-  account.WithTokenDTO:
+  dto.UpdateNoteDTO:
+    properties:
+      body:
+        type: string
+      color:
+        type: string
+      header:
+        type: string
+      id:
+        type: integer
+    type: object
+  dto.UpdateTagDTO:
+    properties:
+      color:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.WithTokenDTO:
     properties:
       email:
         type: string
@@ -47,26 +101,7 @@ definitions:
         example: status bad request
         type: string
     type: object
-  note.CreateNoteDTO:
-    properties:
-      body:
-        type: string
-      color:
-        type: string
-      header:
-        type: string
-    required:
-    - color
-    - header
-    type: object
-  note.GetAllNotesDTO:
-    properties:
-      notes:
-        items:
-          $ref: '#/definitions/note.Note'
-        type: array
-    type: object
-  note.Note:
+  model.Note:
     properties:
       body:
         type: string
@@ -83,38 +118,10 @@ definitions:
       tags:
         description: '[]tag.Tag'
         items:
-          $ref: '#/definitions/tag.Tag'
+          $ref: '#/definitions/model.Tag'
         type: array
     type: object
-  note.UpdateNoteDTO:
-    properties:
-      body:
-        type: string
-      color:
-        type: string
-      header:
-        type: string
-      id:
-        type: integer
-    type: object
-  tag.CreateTagDTO:
-    properties:
-      color:
-        type: string
-      name:
-        type: string
-    required:
-    - color
-    - name
-    type: object
-  tag.GetAllTagsDTO:
-    properties:
-      tags:
-        items:
-          $ref: '#/definitions/tag.Tag'
-        type: array
-    type: object
-  tag.Tag:
+  model.Tag:
     properties:
       color:
         type: string
@@ -126,14 +133,6 @@ definitions:
     - color
     - name
     type: object
-  tag.UpdateTagDTO:
-    properties:
-      color:
-        type: string
-      name:
-        type: string
-    type: object
-host: localhost:8080
 info:
   contact: {}
   description: API Server for notes-taking applications
@@ -141,7 +140,7 @@ info:
   title: Neat.ly API
   version: "1.0"
 paths:
-  /api/v1/accounts/:id:
+  /api/v1/accounts/{id}:
     get:
       consumes:
       - application/json
@@ -159,7 +158,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/account.GetAccountDTO'
+            $ref: '#/definitions/dto.GetAccountDTO'
         "500":
           description: Internal Server Error
           schema:
@@ -168,6 +167,8 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/e.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: getAccount
       tags:
       - account
@@ -183,14 +184,14 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/account.LoginAccountDTO'
+          $ref: '#/definitions/dto.LoginAccountDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/account.WithTokenDTO'
+            $ref: '#/definitions/dto.WithTokenDTO'
         "500":
           description: Internal Server Error
           schema:
@@ -214,7 +215,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/account.RegisterAccountDTO'
+          $ref: '#/definitions/dto.RegisterAccountDTO'
       produces:
       - application/json
       responses:
@@ -249,7 +250,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/note.GetAllNotesDTO'
+            $ref: '#/definitions/dto.GetAllNotesDTO'
         "400":
           description: Bad Request
           schema:
@@ -281,7 +282,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/note.CreateNoteDTO'
+          $ref: '#/definitions/dto.CreateNoteDTO'
       produces:
       - application/json
       responses:
@@ -357,7 +358,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/note.Note'
+            $ref: '#/definitions/model.Note'
         "500":
           description: Internal Server Error
           schema:
@@ -368,7 +369,7 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Get Note By Id
+      summary: Get Note By id
       tags:
       - notes
     patch:
@@ -387,7 +388,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/note.UpdateNoteDTO'
+          $ref: '#/definitions/dto.UpdateNoteDTO'
       produces:
       - application/json
       responses:
@@ -423,7 +424,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tag.GetAllTagsDTO'
+            $ref: '#/definitions/dto.GetAllTagsDTO'
         "400":
           description: Bad Request
           schema:
@@ -460,7 +461,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/tag.CreateTagDTO'
+          $ref: '#/definitions/dto.CreateTagDTO'
       produces:
       - application/json
       responses:
@@ -500,7 +501,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tag.GetAllTagsDTO'
+            $ref: '#/definitions/dto.GetAllTagsDTO'
         "400":
           description: Bad Request
           schema:
@@ -577,7 +578,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tag.Tag'
+            $ref: '#/definitions/model.Tag'
         "400":
           description: Bad Request
           schema:
@@ -614,7 +615,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/tag.UpdateTagDTO'
+          $ref: '#/definitions/dto.UpdateTagDTO'
       produces:
       - application/json
       responses:
@@ -641,7 +642,7 @@ paths:
       summary: Update tag by ID
       tags:
       - tags
-  /api/v1/tags/{id}/tags/{tag_id}:
+  /api/v1/tags/{note_id}/tags/{tag_id}:
     delete:
       consumes:
       - application/json

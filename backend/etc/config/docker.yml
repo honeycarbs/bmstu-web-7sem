@@ -1,0 +1,17 @@
+---
+is_debug: true
+listen:
+  bind_ip: "localhost"
+  port: "8080"
+db:
+  host: "neatly-postgres"
+  port: "5432"
+  user: "neatly"
+  password: "neatly"
+  dbname: "neatly"
+  ssl_mode: "disable"
+  migrations_path: "etc/migrations"
+jwt:
+  secret: "$ecr3t"
+swagger:
+  host: "localhost:8080"

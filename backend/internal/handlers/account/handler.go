@@ -55,7 +55,7 @@ func (h *Handler) Register(router *gin.Engine) {
 // @ID create-account
 // @Accept  json
 // @Produce  json
-// @Param dto body account.RegisterAccountDTO true "account info"
+// @Param dto body dto.RegisterAccountDTO true "account info"
 // @Success 201 {string} string 1
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
@@ -103,10 +103,10 @@ func (h *Handler) register(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id   path  string  true  "id"
-// @Success 200 {object} account.GetAccountDTO
+// @Success 200 {object} dto.GetAccountDTO
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
-// @Router /api/v1/accounts/:id [get]
+// @Router /api/v1/accounts/{id} [get]
 func (h *Handler) getAccount(ctx *gin.Context) {
 	fromTokenID, err := middleware.GetUserID(ctx)
 	if err != nil {
@@ -144,8 +144,8 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 // @ID login
 // @Accept  json
 // @Produce  json
-// @Param dto body account.LoginAccountDTO true "credentials"
-// @Success 200 {object} account.WithTokenDTO
+// @Param dto body dto.LoginAccountDTO true "credentials"
+// @Success 200 {object} dto.WithTokenDTO
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/login [post]
