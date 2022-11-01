@@ -1,20 +1,21 @@
-package note
+package mapper
 
 import (
-	"neatly/internal/model/note"
+	"neatly/internal/model"
+	"neatly/internal/model/dto"
 	"neatly/pkg/logging"
 )
 
-type mapper struct {
+type NoteMapper struct {
 	logger logging.Logger
 }
 
-func New(logger logging.Logger) *mapper {
-	return &mapper{logger: logger}
+func NewNoteMapper(logger logging.Logger) *NoteMapper {
+	return &NoteMapper{logger: logger}
 }
 
-func (m *mapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
-	n := note.Note{
+func (m *NoteMapper) MapCreateNoteDTO(dto dto.CreateNoteDTO) model.Note {
+	n := model.Note{
 		ID:        0,
 		Header:    dto.Header,
 		Body:      dto.Body,
@@ -29,18 +30,18 @@ func (m *mapper) MapCreateNoteDTO(dto note.CreateNoteDTO) note.Note {
 	return n
 }
 
-func (m *mapper) MapGetAllNotesDTO(ns []note.Note) note.GetAllNotesDTO {
-	return note.GetAllNotesDTO{
+func (m *NoteMapper) MapGetAllNotesDTO(ns []model.Note) dto.GetAllNotesDTO {
+	return dto.GetAllNotesDTO{
 		Notes: ns,
 	}
 }
 
-func (m *mapper) MapUpdateNoteDTO(dto note.UpdateNoteDTO) note.Note {
+func (m *NoteMapper) MapUpdateNoteDTO(dto dto.UpdateNoteDTO) model.Note {
 	if dto.Color == "" {
-		dto.Color = note.DefaultNoteColor
+		dto.Color = model.DefaultNoteColor
 	}
 
-	n := note.Note{
+	n := model.Note{
 		ID:        dto.ID,
 		Header:    dto.Header,
 		Body:      dto.Body,

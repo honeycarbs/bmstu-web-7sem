@@ -2,14 +2,13 @@ package note
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
-	"neatly/internal/model/account"
-	"neatly/internal/model/note"
+	"neatly/internal/model"
+	"neatly/internal/model/dto"
 	"neatly/internal/service"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
@@ -18,21 +17,19 @@ import (
 )
 
 const (
-	tagsURLGroup  = "/tags"
 	notesURLGroup = "/notes"
 	apiURLGroup   = "/api"
 	apiVersion    = "1"
-	searchURL     = "/search"
 	tagSearchKey  = "tag"
 )
 
 type Handler struct {
 	logger  logging.Logger
-	service service.Note
-	mapper  mapper.Note
+	service service.NoteServiceImpl
+	mapper  mapper.NoteMapper
 }
 
-func NewHandler(logger logging.Logger, service service.Note, mapper mapper.Note) *Handler {
+func NewHandler(logger logging.Logger, service service.NoteServiceImpl, mapper mapper.NoteMapper) *Handler {
 	return &Handler{logger: logger, service: service, mapper: mapper}
 }
 
@@ -71,18 +68,14 @@ func (h *Handler) createNote(ctx *gin.Context) {
 		return
 	}
 
-	var dto note.CreateNoteDTO
-	if err := ctx.BindJSON(&dto); err != nil {
+	var createNoteDTO dto.CreateNoteDTO
+	if err := ctx.BindJSON(&createNoteDTO); err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &note.NoteNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	n := h.mapper.MapCreateNoteDTO(dto)
+	n := h.mapper.MapCreateNoteDTO(createNoteDTO)
 	err = h.service.Create(userID, &n)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
@@ -90,7 +83,7 @@ func (h *Handler) createNote(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, fmt.Sprintf(
-		"%s%s/%v", apiURLGroup, notesURLGroup, n.ID))
+		"%s/v%v%s/%v", apiURLGroup, apiVersion, notesURLGroup, n.ID))
 }
 
 // @Summary Get all notes from user filter by tag
@@ -108,25 +101,17 @@ func (h *Handler) createNote(ctx *gin.Context) {
 func (h *Handler) getAllNotes(ctx *gin.Context) {
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
-		if errors.Is(err, &account.AccountNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	var ns []note.Note
+	var ns []model.Note
 
 	keys := ctx.Request.URL.Query()
 	values := keys[tagSearchKey]
 	if values == nil {
 		ns, err = h.service.GetAll(userID)
 		if err != nil {
-			if errors.Is(err, &note.NoteNotFoundErr{}) {
-				e.NewErrorResponse(ctx, http.StatusNotFound, err)
-				return
-			}
 			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 			return
 		}
@@ -139,9 +124,9 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 		}
 	}
 
-	dto := h.mapper.MapGetAllNotesDTO(ns)
+	allNotesDTO := h.mapper.MapGetAllNotesDTO(ns)
 
-	ctx.JSON(http.StatusOK, dto)
+	ctx.JSON(http.StatusOK, allNotesDTO)
 }
 
 // @Summary Get Note By Id
@@ -172,10 +157,6 @@ func (h *Handler) getOneNote(ctx *gin.Context) {
 
 	n, err := h.service.GetOne(userID, noteID)
 	if err != nil {
-		if errors.Is(err, &note.NoteNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -218,13 +199,13 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	}
 	h.logger.Debug("unmarshal body bytes")
 	var (
-		dto            note.UpdateNoteDTO
+		updateNoteDTO  dto.UpdateNoteDTO
 		data           map[string]interface{}
 		needBodyUpdate bool
 	)
 	h.logger.Infof("NOTE ID: %v", noteID)
-	dto.ID = noteID
-	if err := json.Unmarshal(bodyBytes, &dto); err != nil {
+	updateNoteDTO.ID = noteID
+	if err := json.Unmarshal(bodyBytes, &updateNoteDTO); err != nil {
 		h.logger.Info(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
@@ -239,7 +220,7 @@ func (h *Handler) updateNote(ctx *gin.Context) {
 	_, needBodyUpdate = data["body"]
 	h.logger.Infof("Need body update: %v", needBodyUpdate)
 
-	n := h.mapper.MapUpdateNoteDTO(dto)
+	n := h.mapper.MapUpdateNoteDTO(updateNoteDTO)
 	err = h.service.Update(userID, n, needBodyUpdate)
 
 	if err != nil {

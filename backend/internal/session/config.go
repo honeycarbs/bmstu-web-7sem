@@ -44,9 +44,9 @@ var once sync.Once
 func GetConfig() *Config {
 	once.Do(func() {
 		logger := logging.GetLogger()
-		logger.Infof("Reading application config from %v", os.Getenv("ENV_FILE"))
+		logger.Infof("Reading application config from %v", os.Getenv("CONF_FILE"))
 		instance = &Config{}
-		if err := cleanenv.ReadConfig(os.Getenv("ENV_FILE"), instance); err != nil {
+		if err := cleanenv.ReadConfig(os.Getenv("CONF_FILE"), instance); err != nil {
 			help, _ := cleanenv.GetDescription(instance, nil)
 			logger.Info(help)
 			logger.Fatal(err)

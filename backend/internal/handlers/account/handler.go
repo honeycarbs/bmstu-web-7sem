@@ -1,12 +1,12 @@
 package account
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
-	"neatly/internal/model/account"
+	"neatly/internal/model"
+	"neatly/internal/model/dto"
 	"neatly/internal/service"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
@@ -24,11 +24,11 @@ const (
 
 type Handler struct {
 	logger  logging.Logger
-	service service.Account
-	mapper  mapper.Account
+	service service.AccountServiceImpl
+	mapper  mapper.AccountMapper
 }
 
-func NewHandler(logger logging.Logger, service service.Account, mapper mapper.Account) *Handler {
+func NewHandler(logger logging.Logger, service service.AccountServiceImpl, mapper mapper.AccountMapper) *Handler {
 	return &Handler{logger: logger, service: service, mapper: mapper}
 }
 
@@ -63,17 +63,17 @@ func (h *Handler) Register(router *gin.Engine) {
 func (h *Handler) register(ctx *gin.Context) {
 	var (
 		err error
-		dto account.RegisterAccountDTO
-		a   account.Account
+		in  dto.RegisterAccountDTO
+		a   model.Account
 	)
 
-	if err = ctx.BindJSON(&dto); err != nil {
+	if err = ctx.BindJSON(&in); err != nil {
 		h.logger.Error(err)
 		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	a, err = h.mapper.MapRegisterAccountDTO(dto)
+	a, err = h.mapper.MapRegisterAccountDTO(in)
 	if err != nil {
 		h.logger.Error(err)
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
@@ -96,6 +96,7 @@ func (h *Handler) register(ctx *gin.Context) {
 }
 
 // @Summary getAccount
+// @Security ApiKeyAuth
 // @Tags account
 // @Description get account
 // @ID get-account
@@ -133,8 +134,8 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 		return
 	}
 
-	dto := h.mapper.MapAccountDTO(a)
-	ctx.JSON(http.StatusOK, dto)
+	out := h.mapper.MapAccountDTO(a)
+	ctx.JSON(http.StatusOK, out)
 }
 
 // @Summary Login
@@ -149,7 +150,8 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/login [post]
 func (h *Handler) login(ctx *gin.Context) {
-	var loginDto account.LoginAccountDTO
+	//h.logger.Info("Got login request")
+	var loginDto dto.LoginAccountDTO
 
 	if err := ctx.BindJSON(&loginDto); err != nil {
 		h.logger.Error(err)
@@ -161,9 +163,7 @@ func (h *Handler) login(ctx *gin.Context) {
 
 	token, err := h.service.GenerateJWT(&a)
 	if err != nil {
-		if errors.Is(err, &account.PasswordDoesNotMatchErr{}) {
-			e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
-		}
+		e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
 		return
 	}
 	loginWithTokenDto := h.mapper.MapAccountWithTokenDTO(token, a)

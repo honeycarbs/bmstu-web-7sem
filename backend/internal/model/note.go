@@ -1,7 +1,6 @@
-package note
+package model
 
 import (
-	"neatly/internal/model/tag"
 	"strings"
 	"time"
 )
@@ -16,7 +15,7 @@ type Note struct {
 	Header    string    `json:"header" db:"header"`
 	Body      string    `json:"body" db:"body"`
 	ShortBody string    `json:"shortBody" db:"short_body"`
-	Tags      []tag.Tag `json:"tags" db:"tags"` // []tag.Tag
+	Tags      []Tag     `json:"tags" db:"tags"` // []tag.Tag
 	Color     string    `json:"color" db:"color"`
 	Edited    time.Time `json:"edited"`
 }

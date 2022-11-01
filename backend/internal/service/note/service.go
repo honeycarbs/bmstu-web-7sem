@@ -1,22 +1,23 @@
 package note
 
 import (
-	"neatly/internal/model/note"
+	"errors"
+	"neatly/internal/model"
 	"neatly/internal/repository"
 	"neatly/pkg/logging"
 )
 
 type Service struct {
-	notesRepository repository.Note
-	tagsRepository  repository.Tag
+	notesRepository *repository.NoteRepositoryImpl
+	tagsRepository  *repository.TagRepositoryImpl
 	logger          logging.Logger
 }
 
-func NewService(notesRepository repository.Note, tagsRepository repository.Tag, logger logging.Logger) *Service {
+func NewService(notesRepository *repository.NoteRepositoryImpl, tagsRepository *repository.TagRepositoryImpl, logger logging.Logger) *Service {
 	return &Service{notesRepository: notesRepository, tagsRepository: tagsRepository, logger: logger}
 }
 
-func (s *Service) Create(userID int, n *note.Note) error {
+func (s *Service) Create(userID int, n *model.Note) error {
 	err := s.notesRepository.Create(userID, n)
 	if err != nil {
 		return err
@@ -25,17 +26,17 @@ func (s *Service) Create(userID int, n *note.Note) error {
 	return nil
 }
 
-func (s *Service) GetAll(userID int) ([]note.Note, error) {
+func (s *Service) GetAll(userID int) ([]model.Note, error) {
 	notes, err := s.notesRepository.GetAll(userID)
 	if err != nil {
-		return []note.Note{}, err
+		return []model.Note{}, err
 	}
 
 	for i := 0; i < len(notes); i++ {
 		noteID := notes[i].ID
 		tags, err := s.tagsRepository.GetAllByNote(userID, noteID)
 		if err != nil {
-			return []note.Note{}, err
+			return []model.Note{}, err
 		}
 		notes[i].Tags = tags
 	}
@@ -43,7 +44,7 @@ func (s *Service) GetAll(userID int) ([]note.Note, error) {
 	return notes, nil
 }
 
-func (s *Service) GetOne(userID, noteID int) (note.Note, error) {
+func (s *Service) GetOne(userID, noteID int) (model.Note, error) {
 	n, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
 		return n, err
@@ -59,13 +60,17 @@ func (s *Service) GetOne(userID, noteID int) (note.Note, error) {
 }
 
 func (s *Service) Delete(userID, noteID int) error {
+	_, err := s.notesRepository.GetOne(userID, noteID)
+	if err != nil {
+		return errors.New("note does not exists or does not belong to user")
+	}
 	return s.notesRepository.Delete(userID, noteID)
 }
 
-func (s *Service) Update(userID int, n note.Note, needBodyUpdate bool) error {
+func (s *Service) Update(userID int, n model.Note, needBodyUpdate bool) error {
 	prev, err := s.notesRepository.GetOne(userID, n.ID)
 	if err != nil {
-		return err
+		return errors.New("note does not exists or does not belong to user")
 	}
 	if n.Header == "" {
 		n.Header = prev.Header
@@ -79,14 +84,14 @@ func (s *Service) Update(userID int, n note.Note, needBodyUpdate bool) error {
 	return s.notesRepository.Update(userID, n)
 }
 
-func (s *Service) FindByTags(userID int, tagNames []string) ([]note.Note, error) {
+func (s *Service) FindByTags(userID int, tagNames []string) ([]model.Note, error) {
 	ns, err := s.notesRepository.GetAll(userID)
 	if err != nil {
 		return ns, err
 	}
 
 	var (
-		notesWithAllTags []note.Note
+		notesWithAllTags []model.Note
 	)
 
 	for _, n := range ns {

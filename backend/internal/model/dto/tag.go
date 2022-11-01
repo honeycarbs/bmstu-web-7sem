@@ -1,4 +1,8 @@
-package tag
+package dto
+
+import (
+	"neatly/internal/model"
+)
 
 type CreateTagDTO struct {
 	Name  string `json:"name" binding:"required"`
@@ -11,5 +15,5 @@ type UpdateTagDTO struct {
 }
 
 type GetAllTagsDTO struct {
-	Tags []Tag `json:"tags"`
+	Tags []model.Tag `json:"tags"`
 }

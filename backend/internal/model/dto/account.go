@@ -1,4 +1,4 @@
-package account
+package dto
 
 type RegisterAccountDTO struct {
 	Name     string `json:"name"`

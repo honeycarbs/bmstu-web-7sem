@@ -1,9 +1,7 @@
-package account
+package model
 
 import (
-	"fmt"
-	"github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,23 +17,15 @@ type Account struct {
 func (a *Account) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
 	if err != nil {
-		return &PasswordDoesNotMatchErr{}
+		return errors.New("password does not match")
 	}
 	return nil
-}
-
-func (a *Account) Validate() error {
-	return validation.ValidateStruct(
-		a,
-		validation.Field(&a.Email, validation.Required, is.Email),
-		validation.Field(&a.Password, validation.Required, validation.Length(6, 100)),
-	)
 }
 
 func GeneratePasswordHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		return "", fmt.Errorf("failed to hash password due to error %w", err)
+		return "", err
 	}
 	return string(hash), nil
 }

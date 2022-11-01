@@ -1,12 +1,11 @@
 package tag
 
 import (
-	"errors"
 	"fmt"
 	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
-	"neatly/internal/model/note"
-	"neatly/internal/model/tag"
+	"neatly/internal/model"
+	"neatly/internal/model/dto"
 	"neatly/internal/service"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
@@ -25,11 +24,11 @@ const (
 
 type Handler struct {
 	logger  logging.Logger
-	service service.Tag
-	mapper  mapper.Tag
+	service *service.TagServiceImpl
+	mapper  mapper.TagMapper
 }
 
-func NewHandler(logger logging.Logger, service service.Tag, mapper mapper.Tag) *Handler {
+func NewHandler(logger logging.Logger, service *service.TagServiceImpl, mapper mapper.TagMapper) *Handler {
 	return &Handler{logger: logger, service: service, mapper: mapper}
 }
 
@@ -85,8 +84,8 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	}
 
 	var (
-		dto tag.CreateTagDTO
-		t   tag.Tag
+		dto dto.CreateTagDTO
+		t   model.Tag
 	)
 
 	if err := ctx.BindJSON(&dto); err != nil {
@@ -99,16 +98,12 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	err = h.service.Create(userID, noteID, &t)
 
 	if err != nil {
-		if errors.Is(err, &note.NoteNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, fmt.Sprintf(
-		"%s%s/%v", apiURLGroup, tagsURLGroup, t.ID))
+		"%s%s/v%v%v", apiURLGroup, apiVersion, tagsURLGroup, t.ID))
 }
 
 // @Summary Get all tags on one note
@@ -141,17 +136,13 @@ func (h *Handler) getAllTagsOnNote(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &note.NoteNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	dto := h.mapper.MapGetAllTagsDTO(tags)
+	allTagsDTO := h.mapper.MapGetAllTagsDTO(tags)
 
-	ctx.JSON(http.StatusOK, dto)
+	ctx.JSON(http.StatusOK, allTagsDTO)
 }
 
 // @Summary Get all tags
@@ -180,9 +171,9 @@ func (h *Handler) getAllTags(ctx *gin.Context) {
 		return
 	}
 
-	dto := h.mapper.MapGetAllTagsDTO(tags)
+	allTagsDTO := h.mapper.MapGetAllTagsDTO(tags)
 
-	ctx.JSON(http.StatusOK, dto)
+	ctx.JSON(http.StatusOK, allTagsDTO)
 }
 
 // @Summary Get one tag by ID
@@ -215,10 +206,6 @@ func (h *Handler) getOneTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &tag.TagNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -253,22 +240,18 @@ func (h *Handler) updateTag(ctx *gin.Context) {
 	}
 
 	var (
-		dto tag.UpdateTagDTO
+		updateTagDTO dto.UpdateTagDTO
 	)
-	if err := ctx.BindJSON(&dto); err != nil {
+	if err := ctx.BindJSON(&updateTagDTO); err != nil {
 		h.logger.Info(err)
 		e.NewErrorResponse(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	t := h.mapper.MapUpdateTagDTO(dto)
+	t := h.mapper.MapUpdateTagDTO(updateTagDTO)
 	err = h.service.Update(userID, tagID, t)
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &tag.TagNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -306,10 +289,6 @@ func (h *Handler) deleteTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &tag.TagNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -355,10 +334,6 @@ func (h *Handler) detachTag(ctx *gin.Context) {
 
 	if err != nil {
 		h.logger.Info(err)
-		if errors.Is(err, &tag.TagNotFoundErr{}) {
-			e.NewErrorResponse(ctx, http.StatusNotFound, err)
-			return
-		}
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 		return
 	}

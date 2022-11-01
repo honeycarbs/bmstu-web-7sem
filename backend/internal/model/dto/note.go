@@ -1,4 +1,8 @@
-package note
+package dto
+
+import (
+	"neatly/internal/model"
+)
 
 type CreateNoteDTO struct {
 	Header string `json:"header" binding:"required"`
@@ -14,5 +18,5 @@ type UpdateNoteDTO struct {
 }
 
 type GetAllNotesDTO struct {
-	Notes []Note `json:"notes"`
+	Notes []model.Note `json:"notes"`
 }

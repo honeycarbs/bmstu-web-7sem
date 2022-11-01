@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	swaggerFiles "github.com/swaggo/files"
@@ -10,6 +9,7 @@ import (
 	"neatly/docs"
 	_ "neatly/docs"
 	"neatly/internal/handlers/account"
+	"neatly/internal/handlers/middleware"
 	"neatly/internal/handlers/note"
 	"neatly/internal/handlers/tag"
 	"neatly/internal/mapper"
@@ -18,7 +18,6 @@ import (
 	"neatly/internal/session"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
-	"os"
 )
 
 // @title Neat.ly API
@@ -34,8 +33,6 @@ import (
 func main() {
 	logging.Init()
 	logger := logging.GetLogger()
-
-	os.Setenv("ENV_FILE", os.Args[1])
 	cfg := session.GetConfig()
 
 	client, err := psqlclient.NewClient(cfg.DB)
@@ -46,29 +43,44 @@ func main() {
 	logger.Info("Create new gin router")
 	router := gin.New()
 
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	router.Use(cors.New(config))
+	logger.Info("Configure CORS")
+	middleware.CorsMiddleware(router)
 
 	docs.SwaggerInfo.Host = cfg.Swagger.Host
-
 	router.GET("api/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	logger.Info("initializing repository")
-	repos := repository.New(client, logger)
+	logger.Info("initializing account repository")
+	accountRepo := repository.NewAccountRepositoryImpl(client, logger)
+	logger.Info("initializing note repository")
+	noteRepo := repository.NewNoteRepositoryImpl(client, logger)
+	logger.Info("initializing tag repository")
+	tagRepo := repository.NewTagRepositoryImpl(client, logger)
 
-	logger.Info("initializing services")
-	services := service.New(repos, logger)
-	mappers := mapper.New(logger)
+	logger.Info("initializing account service")
+	accountService := service.NewAccountServiceImpl(accountRepo, logger)
+	logger.Info("initializing note service")
+	noteService := service.NewNoteServiceImpl(noteRepo, tagRepo, logger)
+	logger.Info("initializing tag service")
+	tagService := service.NewTagServiceImpl(noteRepo, tagRepo, logger)
 
-	accountHandler := account.NewHandler(logger, services.Account, mappers.Account)
+	logger.Info("initializing account mapper")
+	accountMapper := mapper.NewAccountMapper(logger)
+	logger.Info("initializing note mapper")
+	noteMapper := mapper.NewNoteMapper(logger)
+	logger.Info("initializing tag mapper")
+	tagMapper := mapper.NewTagMapper(logger)
+
+	logger.Info("initializing account handler")
+	accountHandler := account.NewHandler(logger, *accountService, *accountMapper)
 	accountHandler.Register(router)
 
-	notesHandler := note.NewHandler(logger, services.Note, mappers.Note)
-	notesHandler.Register(router)
+	logger.Info("initializing note handler")
+	noteHandler := note.NewHandler(logger, *noteService, *noteMapper)
+	noteHandler.Register(router)
 
-	tagsHandler := tag.NewHandler(logger, services.Tag, mappers.Tag)
-	tagsHandler.Register(router)
+	logger.Info("initializing tag handler")
+	tagHandler := tag.NewHandler(logger, tagService, *tagMapper)
+	tagHandler.Register(router)
 
 	server.Run(cfg, router, logger)
 }

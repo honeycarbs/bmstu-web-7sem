@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"neatly/pkg/e"
 	"neatly/pkg/jwt"
@@ -14,6 +15,12 @@ const (
 	authorizationHeader = "Authorization"
 	userCtx             = "user_id"
 )
+
+func CorsMiddleware(router *gin.Engine) {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	router.Use(cors.New(config))
+}
 
 func Authenticate(ctx *gin.Context) {
 	header := ctx.GetHeader(authorizationHeader)

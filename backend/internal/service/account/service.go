@@ -1,36 +1,31 @@
 package account
 
 import (
-	"neatly/internal/model/account"
+	"neatly/internal/model"
 	"neatly/internal/repository"
 	"neatly/pkg/jwt"
 	"neatly/pkg/logging"
 )
 
 type Service struct {
-	repository repository.Account
+	repository *repository.AccountRepositoryImpl
+	logger     logging.Logger
 }
 
-func NewService(repository repository.Account) *Service {
-	return &Service{repository: repository}
+func NewService(repository *repository.AccountRepositoryImpl, logger logging.Logger) *Service {
+	return &Service{repository: repository, logger: logger}
 }
 
-func (s *Service) CreateAccount(a *account.Account) error {
-	err := a.Validate()
-	if err != nil {
-		return err
-	}
-	err = s.repository.CreateAccount(a)
+func (s *Service) CreateAccount(a *model.Account) error {
+	err := s.repository.CreateAccount(a)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) GenerateJWT(a *account.Account) (string, error) {
+func (s *Service) GenerateJWT(a *model.Account) (string, error) {
 	err := s.repository.AuthorizeAccount(a)
-	logging.GetLogger().Info(a.ID, a.Name, a.Email)
-
 	err = a.CheckPassword(a.Password)
 	if err != nil {
 		return "", err
@@ -44,9 +39,9 @@ func (s *Service) GenerateJWT(a *account.Account) (string, error) {
 	return token, nil
 }
 
-func (s *Service) GetOne(userID int) (account.Account, error) {
+func (s *Service) GetOne(userID int) (model.Account, error) {
 	a, err := s.repository.GetOne(userID)
-	logging.GetLogger().Info(a.ID, a.Name, a.Email)
+	s.logger.Info(a.ID, a.Name, a.Email)
 
 	return a, err
 }

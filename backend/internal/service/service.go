@@ -1,51 +1,65 @@
 package service
 
 import (
-	"neatly/internal/model/account"
-	"neatly/internal/model/note"
-	"neatly/internal/model/tag"
+	"neatly/internal/model"
 	"neatly/internal/repository"
-	authService "neatly/internal/service/account"
-	noteService "neatly/internal/service/note"
-	tagService "neatly/internal/service/tag"
+	"neatly/internal/service/account"
+	"neatly/internal/service/note"
+	"neatly/internal/service/tag"
 	"neatly/pkg/logging"
 )
 
-type Account interface {
-	CreateAccount(u *account.Account) error
-	GenerateJWT(u *account.Account) (string, error)
-	GetOne(userID int) (account.Account, error)
+type AccountService interface {
+	CreateAccount(a *model.Account) error
+	GenerateJWT(a *model.Account) (string, error)
+	GetOne(userID int) (model.Account, error)
 }
 
-type Note interface {
-	Create(userID int, n *note.Note) error
-	GetAll(userID int) ([]note.Note, error)
-	GetOne(userID, noteID int) (note.Note, error)
+type AccountServiceImpl struct {
+	AccountService
+}
+
+func NewAccountServiceImpl(repo *repository.AccountRepositoryImpl, logger logging.Logger) *AccountServiceImpl {
+	return &AccountServiceImpl{
+		AccountService: account.NewService(repo, logger),
+	}
+}
+
+type NoteService interface {
+	Create(userID int, n *model.Note) error
+	GetAll(userID int) ([]model.Note, error)
+	GetOne(userID, noteID int) (model.Note, error)
 	Delete(userID, noteID int) error
-	Update(userID int, n note.Note, needBodyUpdate bool) error
-	FindByTags(userID int, tagNames []string) ([]note.Note, error)
+	Update(userID int, n model.Note, needBodyUpdate bool) error
+	FindByTags(userID int, tagNames []string) ([]model.Note, error)
 }
 
-type Tag interface {
-	Create(userID, noteID int, tag *tag.Tag) error
-	GetAll(userID int) ([]tag.Tag, error)
-	GetAllByNote(userID, noteID int) ([]tag.Tag, error)
-	GetOne(userID, tagID int) (tag.Tag, error)
+type NoteServiceImpl struct {
+	NoteService
+}
+
+func NewNoteServiceImpl(noteRepo *repository.NoteRepositoryImpl, tagRepo *repository.TagRepositoryImpl, logger logging.Logger) *NoteServiceImpl {
+	return &NoteServiceImpl{
+		NoteService: note.NewService(noteRepo, tagRepo, logger),
+	}
+}
+
+type TagService interface {
+	Create(userID, noteID int, tag *model.Tag) error
+	GetAll(userID int) ([]model.Tag, error)
+	GetAllByNote(userID, noteID int) ([]model.Tag, error)
+	GetOne(userID, tagID int) (model.Tag, error)
 	Delete(userID, tagID int) error
-	Update(userID, tagID int, t tag.Tag) error
+	Update(userID, tagID int, t model.Tag) error
 	Detach(userID, tagID, noteID int) error
 }
 
-type Service struct {
-	Account
-	Note
-	Tag
+type TagServiceImpl struct {
+	TagService
 }
 
-func New(repo *repository.Repository, logger logging.Logger) *Service {
-	return &Service{
-		Account: authService.NewService(repo.Account),
-		Note:    noteService.NewService(repo.Note, repo.Tag, logger),
-		Tag:     tagService.NewService(repo.Tag, repo.Note, logger),
+func NewTagServiceImpl(noteRepo *repository.NoteRepositoryImpl, tagRepo *repository.TagRepositoryImpl, logger logging.Logger) *TagServiceImpl {
+	return &TagServiceImpl{
+		TagService: tag.NewService(tagRepo, noteRepo, logger),
 	}
 }

@@ -1,12 +1,9 @@
 package psql
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"neatly/internal/model/note"
-	"neatly/internal/model/tag"
+	"neatly/internal/model"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
 )
@@ -26,7 +23,7 @@ func NewTagPostgres(client *psqlclient.Client, logger logging.Logger) *TagPostgr
 	return &TagPostgres{db: client.DB, logger: logger}
 }
 
-func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
+func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -43,10 +40,6 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
 	err = row.Scan(&t.ID)
 
 	if err != nil {
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return &note.CanNotCreateNoteErr{}
-		}
 		return err
 	}
 
@@ -61,11 +54,6 @@ func (r *TagPostgres) Create(userID, noteID int, t *tag.Tag) error {
     			);`, usersTagsTable)
 	_, err = tx.Exec(userTagQuery, userID, t.ID)
 	if err != nil {
-		tx.Rollback()
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return &note.CanNotCreateNoteErr{}
-		}
 		return err
 	}
 	return tx.Commit()
@@ -84,9 +72,9 @@ func (r *TagPostgres) Assign(tagID, noteID, userID int) error {
 	return nil
 }
 
-func (r *TagPostgres) GetAll(userID int) ([]tag.Tag, error) {
-	var tags []tag.Tag
-	tags = make([]tag.Tag, 0)
+func (r *TagPostgres) GetAll(userID int) ([]model.Tag, error) {
+	var tags []model.Tag
+	tags = make([]model.Tag, 0)
 
 	query := fmt.Sprintf(`SELECT tags_id AS id, name, color FROM
 								%s t INNER JOIN %s ut ON ut.tags_id = t.id  WHERE
@@ -99,9 +87,9 @@ func (r *TagPostgres) GetAll(userID int) ([]tag.Tag, error) {
 	return tags, err
 }
 
-func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]tag.Tag, error) {
-	var tags []tag.Tag
-	tags = make([]tag.Tag, 0)
+func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
+	var tags []model.Tag
+	tags = make([]model.Tag, 0)
 
 	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
     							INNER JOIN %s ut ON ut.tags_id = t.id
@@ -116,8 +104,8 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]tag.Tag, error) {
 	return tags, err
 }
 
-func (r *TagPostgres) GetOne(userID, tagID int) (tag.Tag, error) {
-	var t tag.Tag
+func (r *TagPostgres) GetOne(userID, tagID int) (model.Tag, error) {
+	var t model.Tag
 
 	query := fmt.Sprintf(`SELECT t.id AS id, name, color FROM %s t
     							INNER JOIN %s ut ON ut.tags_id = t.id
@@ -126,12 +114,7 @@ func (r *TagPostgres) GetOne(userID, tagID int) (tag.Tag, error) {
 		tagsTable, usersTagsTable, notesTagsTable)
 
 	err := r.db.Get(&t, query, userID, tagID)
-	if err != nil {
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return t, &tag.TagNotFoundErr{}
-		}
-	}
+
 	return t, err
 }
 
@@ -145,7 +128,7 @@ func (r *TagPostgres) Delete(userID, tagID int) error {
 	return err
 }
 
-func (r *TagPostgres) Update(userID, tagID int, t tag.Tag) error {
+func (r *TagPostgres) Update(userID, tagID int, t model.Tag) error {
 	query := fmt.Sprintf(
 		`UPDATE %s t SET 
                 name=$1, color=$2 FROM

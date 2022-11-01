@@ -1,11 +1,9 @@
 package psql
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"neatly/internal/model/note"
+	"neatly/internal/model"
 	"neatly/pkg/client/psqlclient"
 	"neatly/pkg/logging"
 	"time"
@@ -29,11 +27,10 @@ func NewNotePostgres(client *psqlclient.Client, logger logging.Logger) *NotePost
 	}
 }
 
-func (r *NotePostgres) Create(userID int, n *note.Note) error {
+func (r *NotePostgres) Create(userID int, n *model.Note) error {
 	tx, err := r.db.Begin()
 	if err != nil {
-		r.logger.Info(err)
-		return &note.CanNotCreateNoteErr{}
+		return err
 	}
 
 	createNoteQuery := fmt.Sprintf(`
@@ -43,29 +40,29 @@ func (r *NotePostgres) Create(userID int, n *note.Note) error {
 	if err := row.Scan(&n.ID); err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return &note.CanNotCreateNoteErr{}
+		return err
 	}
 	createNoteBodyQuery := fmt.Sprintf("INSERT INTO %s (id, body) VALUES ($1, $2)", notesBodyTable)
 	_, err = tx.Exec(createNoteBodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return &note.CanNotCreateNoteErr{}
+		return err
 	}
 	createUsersNoteQuery := fmt.Sprintf("INSERT INTO %s (users_id, notes_id) VALUES ($1, $2)", usersNotesTable)
 	_, err = tx.Exec(createUsersNoteQuery, userID, n.ID)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return &note.CanNotCreateNoteErr{}
+		return err
 	}
 
 	return tx.Commit()
 }
 
-func (r *NotePostgres) GetAll(userID int) ([]note.Note, error) {
-	var notes []note.Note
-	notes = make([]note.Note, 0)
+func (r *NotePostgres) GetAll(userID int) ([]model.Note, error) {
+	var notes []model.Note
+	notes = make([]model.Note, 0)
 
 	getNotesQuery := fmt.Sprintf(
 		`SELECT n.id, n.header, n.short_body, n.color, n.edited FROM %s n
@@ -84,12 +81,12 @@ func (r *NotePostgres) GetAll(userID int) ([]note.Note, error) {
 	return notes, err
 }
 
-func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
+func (r *NotePostgres) GetOne(userID, noteID int) (model.Note, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		return note.Note{}, err
+		return model.Note{}, err
 	}
-	var n note.Note
+	var n model.Note
 
 	selectNoteQuery := fmt.Sprintf(
 		`SELECT n.id, n.header, n.short_body, n.color, n.edited FROM
@@ -103,10 +100,7 @@ func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
 	if err != nil {
 		tx.Rollback()
 		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return note.Note{}, &note.NoteNotFoundErr{}
-		}
-		return note.Note{}, err
+		return model.Note{}, err
 	}
 
 	selectBodyQuery := fmt.Sprintf(
@@ -119,10 +113,7 @@ func (r *NotePostgres) GetOne(userID, noteID int) (note.Note, error) {
 	err = r.db.Get(&n.Body, selectBodyQuery, noteID)
 	if err != nil {
 		tx.Rollback()
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return note.Note{}, &note.NoteNotFoundErr{}
-		}
+		return n, err
 	}
 
 	return n, tx.Commit()
@@ -138,7 +129,7 @@ func (r *NotePostgres) Delete(userID, noteID int) error {
 	return err
 }
 
-func (r *NotePostgres) Update(userID int, n note.Note) error {
+func (r *NotePostgres) Update(userID int, n model.Note) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -160,10 +151,6 @@ func (r *NotePostgres) Update(userID int, n note.Note) error {
 	)
 	if err != nil {
 		tx.Rollback()
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return &note.NoteNotFoundErr{}
-		}
 		return err
 	}
 
@@ -173,10 +160,7 @@ func (r *NotePostgres) Update(userID int, n note.Note) error {
 	_, err = r.db.Exec(bodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()
-		r.logger.Info(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return &note.NoteNotFoundErr{}
-		}
+		return err
 	}
 
 	return tx.Commit()

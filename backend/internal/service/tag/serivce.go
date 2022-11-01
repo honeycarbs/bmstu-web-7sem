@@ -2,26 +2,26 @@ package tag
 
 import (
 	"errors"
-	"neatly/internal/model/tag"
+	"neatly/internal/model"
 	"neatly/internal/repository"
 	"neatly/pkg/logging"
 	"strings"
 )
 
 type Service struct {
-	tagsRepository  repository.Tag
-	notesRepository repository.Note
+	tagsRepository  *repository.TagRepositoryImpl
+	notesRepository *repository.NoteRepositoryImpl
 	logger          logging.Logger
 }
 
-func NewService(tr repository.Tag, nr repository.Note, l logging.Logger) *Service {
-	return &Service{tagsRepository: tr, notesRepository: nr, logger: l}
+func NewService(tagsRepository *repository.TagRepositoryImpl, notesRepository *repository.NoteRepositoryImpl, logger logging.Logger) *Service {
+	return &Service{tagsRepository: tagsRepository, notesRepository: notesRepository, logger: logger}
 }
 
-func (s *Service) Create(userID, noteID int, t *tag.Tag) error {
+func (s *Service) Create(userID, noteID int, t *model.Tag) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to accounts")
+		return errors.New("note does not exist or does not belong to accounts")
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)
@@ -55,15 +55,15 @@ func (s *Service) Create(userID, noteID int, t *tag.Tag) error {
 	return err
 }
 
-func (s *Service) GetAll(userID int) ([]tag.Tag, error) {
+func (s *Service) GetAll(userID int) ([]model.Tag, error) {
 	return s.tagsRepository.GetAll(userID)
 }
 
-func (s *Service) GetAllByNote(userID, noteID int) ([]tag.Tag, error) {
+func (s *Service) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
 	return s.tagsRepository.GetAllByNote(userID, noteID)
 }
 
-func (s *Service) GetOne(userID, tagID int) (tag.Tag, error) {
+func (s *Service) GetOne(userID, tagID int) (model.Tag, error) {
 	return s.tagsRepository.GetOne(userID, tagID)
 }
 
@@ -71,7 +71,7 @@ func (s *Service) Delete(userID, tagID int) error {
 	return s.tagsRepository.Delete(userID, tagID)
 }
 
-func (s *Service) Update(userID, tagID int, t tag.Tag) error {
+func (s *Service) Update(userID, tagID int, t model.Tag) error {
 	tp, err := s.tagsRepository.GetOne(userID, tagID)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (s *Service) Update(userID, tagID int, t tag.Tag) error {
 func (s *Service) Detach(userID, tagID, noteID int) error {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return errors.New("note does not exists or does not belong to accounts")
+		return errors.New("note does not exist or does not belong to user")
 	}
 
 	ns, err := s.notesRepository.GetAll(userID)
@@ -121,7 +121,7 @@ func (s *Service) Detach(userID, tagID, noteID int) error {
 	return err
 }
 
-func (s *Service) checkIfUnique(tags []tag.Tag, tu tag.Tag) (bool, int) {
+func (s *Service) checkIfUnique(tags []model.Tag, tu model.Tag) (bool, int) {
 	for _, t := range tags {
 		if strings.Compare(t.Name, tu.Name) == 0 {
 			s.logger.Infof("Found matching tag with id %v", t.ID)
