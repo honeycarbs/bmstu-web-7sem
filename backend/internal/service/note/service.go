@@ -91,13 +91,13 @@ func (s *Service) FindByTags(userID int, tagNames []string) ([]model.Note, error
 	}
 
 	var (
-		notesWithAllTags []model.Note
+		notesWithAllTags = make([]model.Note, 0)
 	)
 
 	for _, n := range ns {
 		n.Tags, err = s.tagsRepository.GetAllByNote(userID, n.ID)
 		if err != nil {
-			return ns, err
+			return notesWithAllTags, err
 		}
 
 		s.logger.Infof("Found tags from note %v: %v", n.ID, n.Tags)

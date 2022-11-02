@@ -112,6 +112,7 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 	values := keys[tagSearchKey]
 	if values == nil {
 		ns, err = h.service.GetAll(userID)
+		h.logger.Info(err)
 		if err != nil {
 			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 			return

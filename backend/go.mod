@@ -7,6 +7,7 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-playground/assert/v2 v2.0.1
+	github.com/go-test/deep v1.0.8
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/golang/mock v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.3.0
