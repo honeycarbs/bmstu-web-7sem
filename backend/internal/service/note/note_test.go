@@ -6,37 +6,17 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
 	"neatly/internal/model"
+	"neatly/internal/model/mother"
 	"neatly/internal/repository"
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"testing"
-	"time"
 )
-
-func NoteMother() model.Note {
-	return model.Note{
-		ID:        0,
-		Header:    "",
-		Body:      "",
-		ShortBody: "",
-		Tags:      nil,
-		Color:     "",
-		Edited:    time.Time{},
-	}
-}
-
-func TagMother() model.Tag {
-	return model.Tag{
-		ID:    0,
-		Name:  "",
-		Color: "",
-	}
-}
 
 func TestService_Create(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, n *model.Note)
-	testNote := NoteMother()
+	testNote := mother.NoteMother()
 
 	testSuites := []struct {
 		testName            string
@@ -89,8 +69,8 @@ func TestService_GetAll(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID int)
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, NoteID int)
 
-	testNote := NoteMother()
-	testTag := TagMother()
+	testNote := mother.NoteMother()
+	testTag := mother.TagMother()
 
 	testNoteWithoutTags := testNote
 	testNoteWithoutTags.Tags = []model.Tag{}
@@ -196,8 +176,8 @@ func TestService_GetOne(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID, noteID int)
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, NoteID int)
 
-	testNote := NoteMother()
-	testTag := TagMother()
+	testNote := mother.NoteMother()
+	testTag := mother.TagMother()
 
 	testNoteWithoutTags := testNote
 	testNoteWithoutTags.Tags = []model.Tag{}
@@ -291,7 +271,7 @@ func TestService_GetOne(t *testing.T) {
 func TestService_Delete(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID, noteID int)
 
-	testNote := NoteMother()
+	testNote := mother.NoteMother()
 
 	testSuites := []struct {
 		testName            string
@@ -340,9 +320,9 @@ func TestService_FindByTags(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID int)
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, NoteID int)
 
-	testNote := NoteMother()
+	testNote := mother.NoteMother()
 
-	testTag := TagMother()
+	testTag := mother.TagMother()
 	testTag.Name = "test"
 
 	testNoteWithoutTags := testNote
@@ -449,7 +429,7 @@ func TestService_FindByTags(t *testing.T) {
 func TestService_Update(t *testing.T) {
 	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID, noteID int, testNote model.Note)
 
-	testNote := NoteMother()
+	testNote := mother.NoteMother()
 	noteForUpdate := testNote
 	noteForUpdate.Header = "UPDATE"
 

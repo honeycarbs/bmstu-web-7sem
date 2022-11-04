@@ -88,36 +88,51 @@ func (s *Service) Update(userID, tagID int, t model.Tag) error {
 }
 
 func (s *Service) Detach(userID, tagID, noteID int) error {
-	_, err := s.notesRepository.GetOne(userID, noteID)
+	inNote, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
 		return e.ClientNoteError
+	}
+	inTag, err := s.tagsRepository.GetOne(userID, tagID)
+	if err != nil {
+		return e.ClientTagError
+	}
+
+	inNote.Tags, err = s.tagsRepository.GetAllByNote(userID, noteID)
+	if err != nil {
+		return err
+	}
+
+	var (
+		attachedToMany = false
+	)
+
+	if inNote.HasSpecificTag(inTag.Name) {
+		s.logger.Info("Detaching tag...")
+		err = s.tagsRepository.Detach(userID, tagID, noteID)
+	} else {
+		s.logger.Info("Tag is not attached to this note.")
+		return nil
 	}
 
 	ns, err := s.notesRepository.GetAll(userID)
 	if err != nil {
 		return err
 	}
+	for _, n := range ns {
+		if n.ID != noteID {
+			n.Tags, err = s.tagsRepository.GetAllByNote(userID, n.ID)
+			if n.HasSpecificTag(inTag.Name) {
+				attachedToMany = true
+			}
+		}
+	}
 
-	t, err := s.tagsRepository.GetOne(userID, tagID)
-	if err != nil {
+	if !attachedToMany {
+		s.logger.Info("Tag is attached to one note and should be deleted.")
+		err = s.tagsRepository.Delete(userID, tagID)
 		return err
 	}
-
-	for _, n := range ns {
-		n.Tags, err = s.tagsRepository.GetAllByNote(userID, n.ID)
-		if err != nil {
-			return err
-		}
-		if n.HasSpecificTag(t.Name) && n.ID != noteID {
-			s.logger.Infof("Found this tag at note %v", n.ID)
-			err = s.tagsRepository.Detach(userID, tagID, noteID)
-			return err
-		}
-	}
-
-	s.logger.Info("Deleting tag")
-	err = s.tagsRepository.Delete(userID, tagID)
-	return err
+	return nil
 }
 
 func (s *Service) checkIfUnique(tags []model.Tag, tu model.Tag) (bool, int) {

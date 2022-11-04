@@ -13,6 +13,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.0
+	github.com/proullon/ramsql v0.0.0-20220719091513-bf3c20043516
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
 	github.com/swaggo/gin-swagger v1.5.3

@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"log"
 	"neatly/internal/model"
+	"neatly/internal/model/mother"
 	"neatly/internal/repository"
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
@@ -16,22 +17,8 @@ import (
 	"testing"
 )
 
-func AccountMother() model.Account {
-
-	testHash, _ := model.GeneratePasswordHash("testtest")
-
-	return model.Account{
-		ID:           0,
-		Name:         "Test",
-		Username:     "TestTest",
-		Email:        "test",
-		Password:     "testtest",
-		PasswordHash: testHash,
-	}
-}
-
 func TokenMother() string {
-	a := AccountMother()
+	a := mother.AccountMother()
 
 	logging.Init()
 	os.Setenv("CONF_FILE", "../../../etc/config/local.yml")
@@ -56,20 +43,20 @@ func TestService_CreateAccount(t *testing.T) {
 	}{
 		{
 			testName:  "ValidAccountRegistration",
-			inAccount: AccountMother(),
+			inAccount: mother.AccountMother(),
 			CreateAccountBehaviour: func(r *mock.MockAccountRepository, a *model.Account) {
 				r.EXPECT().CreateAccount(a).Return(nil)
 			},
-			outAccount:    AccountMother(),
+			outAccount:    mother.AccountMother(),
 			ExpectedError: nil,
 		},
 		{
 			testName:  "UserAlreadyExists",
-			inAccount: AccountMother(),
+			inAccount: mother.AccountMother(),
 			CreateAccountBehaviour: func(r *mock.MockAccountRepository, a *model.Account) {
 				r.EXPECT().CreateAccount(a).Return(e.ClientAccountError)
 			},
-			outAccount:    AccountMother(),
+			outAccount:    mother.AccountMother(),
 			ExpectedError: e.ClientAccountError,
 		},
 	}
@@ -97,7 +84,7 @@ func TestService_CreateAccount(t *testing.T) {
 
 func TestService_GenerateJWT(t *testing.T) {
 	type RepoMockBehaviour func(r *mock.MockAccountRepository, a *model.Account)
-	testAccount := AccountMother()
+	testAccount := mother.AccountMother()
 	testAccountInvalidPassword := testAccount
 	testAccountInvalidPassword.Password = "kto prochital tot loh"
 
@@ -154,7 +141,7 @@ func TestService_GenerateJWT(t *testing.T) {
 }
 func TestService_GetOne(t *testing.T) {
 	type RepoMockBehaviour func(r *mock.MockAccountRepository, id int)
-	testAccount := AccountMother()
+	testAccount := mother.AccountMother()
 
 	testSuites := []struct {
 		testName            string
