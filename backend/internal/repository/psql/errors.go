@@ -3,7 +3,6 @@ package psql
 import (
 	"github.com/lib/pq"
 	"neatly/pkg/e"
-	"neatly/pkg/logging"
 )
 
 const (
@@ -11,10 +10,13 @@ const (
 	usernameConstraint = "users_username_key"
 )
 
-func ParsePsqlError(err *pq.Error) error {
-	logging.GetLogger().Info(err.Code, err.Constraint)
+func ParsePsqlError(err error) error {
+	pqerr, ok := err.(*pq.Error)
+	if !ok {
+		return err
+	}
 	switch {
-	case err.Code == codeDuplicateVal && err.Constraint == usernameConstraint:
+	case pqerr.Code == codeDuplicateVal && pqerr.Constraint == usernameConstraint:
 		return e.ClientAccountError
 	default:
 		return err

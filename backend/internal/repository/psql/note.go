@@ -105,8 +105,8 @@ func (r *NotePostgres) GetOne(userID, noteID int) (model.Note, error) {
 }
 
 func (r *NotePostgres) Delete(userID, noteID int) error {
-	query := `DELETE FROM notes n USING users_notes un WHERE 
-              n.id = un.notes_id AND un.users_id = $1 AND un.notes_id = $2`
+	query := `DELETE FROM notes WHERE 
+              notes.id = $2`
 	_, err := r.db.Exec(query, userID, noteID)
 
 	return err
@@ -117,10 +117,10 @@ func (r *NotePostgres) Update(userID int, n model.Note) error {
 	if err != nil {
 		return err
 	}
-	noteQuery := `UPDATE notes n SET 
+	noteQuery := `UPDATE notes SET 
                   header=$1, short_body=$2, color = $3, edited=$4 FROM
-                  users_notes un WHERE n.id = un.notes_id AND 
-				  un.notes_id = $5 AND un.users_id = $6`
+                  users_notes WHERE notes.id = users_notes.notes_id AND 
+				  users_notes.notes_id = $5 AND users_notes.users_id = $6`
 	_, err = r.db.Exec(
 		noteQuery,
 		n.Header,
@@ -135,7 +135,7 @@ func (r *NotePostgres) Update(userID int, n model.Note) error {
 		return err
 	}
 
-	bodyQuery := `UPDATE notes_body nb SET body=$2 WHERE nb.id = $1`
+	bodyQuery := `UPDATE notes_body SET body=$2 WHERE notes_body.id = $1`
 	_, err = r.db.Exec(bodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()

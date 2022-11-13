@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>go-test-report</title>
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+            background-color: #f3f3f3;
+            border-top: 2px #dee6e8 solid;
+            margin: 0;
+        }
+
+        div.pageHeader span.projectTitle {
+            font-family: serif;
+            font-size: 2em;
+            padding-left: 56px;
+            padding-top: 80px;
+            display: block;
+            color: #a5a5a5;
+            text-shadow: 0 -1px 1px white;
+        }
+
+        div.pageHeader div.testStats {
+            position: absolute;
+            top: 7px;
+            right: 52px;
+            font-size: 0.8em;
+            color: #a2a2a2;
+        }
+
+        div.pageHeader div.testStats span.indicator {
+            font-size: 2em;
+            position: relative;
+            top: 5px;
+            text-shadow: 0 1px 0 white;
+        }
+
+        div.pageHeader div.testStats span strong {
+            margin-right: 16px;
+        }
+
+        div.pageHeader div.testStats span.total {
+            border-right: 1px #afafaf dotted;
+            background: #8298af;
+        }
+
+        div.pageHeader div.testStats span.passed {
+            border-right: 1px #afafaf dotted;
+            background: #6fca83;
+        }
+
+        div.pageHeader div.testStats span.skipped {
+            background: #bababa;
+        }
+
+        div.pageHeader div.testStats span.failed {
+            background: #ff7676;
+        }
+
+        div.pageHeader div.testStats span {
+            margin-right: 1px;
+            height: 55px;
+            padding: 20px 8px 18px;
+            color: white;
+        }
+
+        div.pageHeader .testGroupsTitle {
+            margin: 16px 32px 8px 40px;
+            font-size: 0.9em;
+            color: darkgrey;
+            display: inline-block;
+        }
+
+        div.pageHeader .testExecutionDate {
+            display: inline-block;
+            position: absolute;
+            right: 10px;
+            margin: 14px 32px 8px 40px;
+            color: #9e9e9e;
+            font-size: 0.9em;
+        }
+
+        .testReportContainer {
+            padding: 0 32px 32px 32px;
+        }
+
+        .cardContainer {
+            padding: 16px 16px 16px;
+            box-shadow: 0 4px 4px #d4d4d4;
+            background-color: white;
+        }
+
+        #testResults {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .testResultGroup {
+            width: 24px;
+            height: 24px;
+            background-color: #43c143;
+            margin-left: 1px;
+            margin-bottom: 1px;
+            box-sizing: border-box;
+        }
+
+        .testResultGroup.selected {
+            border: 1px white solid;
+            background-color: black !important;
+        }
+
+        .testResultGroup.skipped {
+            border: 2px gray solid;
+        }
+
+        .testResultGroup.failed {
+            background-color: red;
+        }
+
+        .cardContainer.testGroupList,
+        .cardContainer.testDetail {
+            margin-top: 16px;
+            padding: 16px;
+        }
+
+        .cardContainer.testGroupList {
+            color: #9c9c9c;
+            padding: 0;
+        }
+
+        .cardContainer.testGroupList .testGroupRow {
+            cursor: default;
+            border-bottom: 1px #dadada dotted;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #139e13;
+            pointer-events: none;
+            display: inline-block;
+            overflow: hidden;
+            float: left;
+            padding-top: 10px;
+            padding-left: 20px;
+            padding-right: 12px;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus.skipped {
+            color: gray;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus.failed {
+            color: red;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testTitle {
+            font-size: 0.9em;
+            padding: 12px 0 10px;
+            display: inline-block;
+            pointer-events: none;
+            color: #525252;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            width: calc(100% - 110px);
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testDuration {
+            pointer-events: none;
+        }
+
+        .cardContainer.testGroupList .testGroupRow {
+            position: relative;
+            border-left: 4px #43c143 solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow.skipped {
+            color: gray;
+            border-left: 4px gray solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow.failed {
+            color: red;
+            border-left: 4px red solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow:hover {
+            background-color: #fffaea;
+            transition: 0.250s;
+        }
+
+        .cardContainer .testOutput {
+            padding: 8px 16px 24px 16px;
+        }
+
+        .cardContainer .console {
+            display: block;
+            font-family: monospace;
+            padding: 10px;
+            background-color: #424242;
+            color: #1aff00;
+            border-bottom: 1px #1aff00 dotted;
+            overflow: auto;
+            font-size: 1.1em;
+        }
+
+        .cardContainer .testOutput .testDetail {
+            border-bottom: 1px #d0d0d0 solid;
+            padding: 16px;
+            background-color: #e6e6e6;
+            border-radius: 0 0 4px 4px;
+            color: dimgrey;
+            font-size: 0.8em;
+        }
+
+        .cardContainer .console.skipped{
+            color: #d9d9d9;
+        }
+
+        .cardContainer .console.failed {
+            color: #ffb2b2;
+        }
+
+        .cardContainer .testDuration {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            text-align: right;
+            padding-right: 8px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="pageHeader">
+    <span class="projectTitle">go-test-report</span>
+    <div class="testStats">
+        <span class="total"><span class="indicator">&boxbox;</span> Total: <strong>92</strong>Duration: <strong>2.646s</strong>
+        </span><span class="passed"><span class="indicator">&check;</span> Passed: <strong>92</strong>
+        </span><span class="skipped"><span class="indicator">&dash;</span> Skipped: <strong>0</strong>
+        </span><span class="failed"><span class="indicator">&cross;</span> Failed: <strong>0</strong>
+        </span>
+    </div>
+    <span class="testGroupsTitle">Test Groups:</span>
+    <span class="testExecutionDate">November 12, 2022 16:07:44</span>
+</div>
+<div class="testReportContainer">
+    <div class="cardContainer">
+        <div id="testResults">
+            
+                <div class="testResultGroup  " id="0"></div>
+            
+                <div class="testResultGroup  " id="1"></div>
+            
+                <div class="testResultGroup  " id="2"></div>
+            
+                <div class="testResultGroup  " id="3"></div>
+            
+                <div class="testResultGroup  " id="4"></div>
+            
+        </div>
+    </div>
+    <div class="cardContainer testGroupList" id="testGroupList"></div>
+</div>
+<script type="application/javascript">
+    /**
+ * @typedef TestStatus
+ * @property {string} TestName
+ * @property {string} Package
+ * @property {number} ElapsedTime
+ * @property {Array.<string>} Output
+ * @property {boolean} Passed
+ * @property {boolean} Skipped
+ */
+class TestStatus {}
+
+/**
+ * @typedef TestGroupData
+ * @type {object}
+ * @property {string} FailureIndicator
+ * @property {string} SkippedIndicator
+ * @property {Array.<TestStatus>}
+ */
+class TestGroupData {}
+
+/**
+ * @typedef TestResults
+ * @type {Array.<TestGroupData>}
+ */
+class TestResults extends Array {}
+
+/**
+ * @typedef SelectedItems
+ * @property {HTMLElement|EventTarget} testResults
+ * @property {String} selectedTestGroupColor
+ */
+class SelectedItems {}
+
+/**
+ * @typedef GoTestReportElements
+ * @property {TestResults} data
+ * @property {HTMLElement} testResultsElem
+ * @property {HTMLElement} testGroupListElem
+ */
+class GoTestReportElements {}
+
+
+/**
+ * Main entry point for GoTestReport.
+ * @param {GoTestReportElements} elements
+ * @returns {{testResultsClickHandler: testResultsClickHandler}}
+ * @constructor
+ */
+window.GoTestReport = function (elements) {
+  const /**@type {SelectedItems}*/ selectedItems = {
+    testResults: null,
+    selectedTestGroupColor: null
+  }
+
+  function addEventData(event) {
+    if (event.data == null) {
+      event.data = {target: event.target}
+    }
+    return event
+  }
+
+
+  const goTestReport = {
+    /**
+     * Invoked when a user clicks on one of the test group div elements.
+     * @param {HTMLElement} target The element associated with the test group.
+     * @param {boolean} shiftKey If pressed, all of test detail associated to the test group is shown.
+     * @param {TestResults} data
+     * @param {SelectedItems} selectedItems
+     * @param {function(target: Element, data: TestResults)} testGroupListHandler
+     */
+    testResultsClickHandler: function (target,
+                                       shiftKey,
+                                       data,
+                                       selectedItems,
+                                       testGroupListHandler) {
+
+      if (target.classList.contains('testResultGroup') === false) {
+        return
+      }
+      if (selectedItems.testResults != null) {
+        let testResultsElement = /**@type {HTMLElement}*/ selectedItems.testResults
+        testResultsElement.classList.remove("selected")
+        testResultsElement.style.backgroundColor = selectedItems.selectedTestGroupColor
+      }
+      const testGroupId = /**@type {number}*/ target.id
+      if ((target.id === undefined)
+        || (data[testGroupId] === undefined)
+        || (data[testGroupId]['TestResults'] === undefined)) {
+        return
+      }
+      const testResults = /**@type {TestResults}*/ data[testGroupId]['TestResults']
+      let testGroupList = /**@type {string}*/ ''
+      selectedItems.selectedTestGroupColor = getComputedStyle(target).getPropertyValue('background-color')
+      selectedItems.testResults = target
+      target.classList.add("selected")
+      for (let i = 0; i < testResults.length; i++) {
+        const testResult = /**@type {TestGroupData}*/ testResults[i]
+        const testPassed = /**@type {boolean}*/ testResult.Passed
+        const testSkipped = /**@type {boolean}*/ testResult.Skipped
+        const testPassedStatus = /**@type {string}*/ (testPassed) ? '' : (testSkipped ? 'skipped' : 'failed')
+        const testId = /**@type {string}*/ target.attributes['id'].value
+        testGroupList += `<div class="testGroupRow ${testPassedStatus}" data-groupid="${testId}" data-index="${i}">
+        <span class="testStatus ${testPassedStatus}">${(testPassed) ? '&check' : (testSkipped ? '&dash' : '&cross')};</span>
+        <span class="testTitle">${testResult.TestName}</span>
+        <span class="testDuration"><span>${testResult.ElapsedTime}s </span>⏱</span>
+      </div>`
+      }
+      const testGroupListElem = elements.testGroupListElem
+      testGroupListElem.innerHTML = ''
+      testGroupListElem.innerHTML = testGroupList
+
+      if (shiftKey) {
+        testGroupListElem.querySelectorAll('.testGroupRow')
+                         .forEach((elem) => testGroupListHandler(elem, data))
+      } else if (testResults.length === 1) {
+        testGroupListHandler(testGroupListElem.querySelector('.testGroupRow'), data)
+      }
+    },
+
+    /**
+     *
+     * @param {Element} target
+     * @param {TestResults} data
+     */
+    testGroupListHandler: function (target, data) {
+      const attribs = target['attributes']
+      if (attribs.hasOwnProperty('data-groupid')) {
+        const groupId = /**@type {number}*/ attribs['data-groupid'].value
+        const testIndex = /**@type {number}*/ attribs['data-index'].value
+        const testStatus = /**@type {TestStatus}*/ data[groupId]['TestResults'][testIndex]
+        const testOutputDiv = /**@type {HTMLDivElement}*/ target.querySelector('div.testOutput')
+
+        if (testOutputDiv == null) {
+          const testOutputDiv = document.createElement('div')
+          testOutputDiv.classList.add('testOutput')
+          const consolePre = document.createElement('pre')
+          consolePre.classList.add('console')
+          const testDetailDiv = document.createElement('div')
+          testDetailDiv.classList.add('testDetail')
+          const packageNameDiv = document.createElement('div')
+          packageNameDiv.classList.add('package')
+          packageNameDiv.innerHTML = `<strong>Package:</strong> ${testStatus.Package}`
+          const testFileNameDiv = document.createElement('div')
+          testFileNameDiv.classList.add('filename')
+          if (testStatus.TestFileName.trim() === "") {
+            testFileNameDiv.innerHTML = `<strong>Filename:</strong> n/a &nbsp;&nbsp;`
+          } else {
+            testFileNameDiv.innerHTML = `<strong>Filename:</strong> ${testStatus.TestFileName} &nbsp;&nbsp;`
+            testFileNameDiv.innerHTML += `<strong>Line:</strong> ${testStatus.TestFunctionDetail.Line} `
+            testFileNameDiv.innerHTML += `<strong>Col:</strong> ${testStatus.TestFunctionDetail.Col}`
+          }
+          testDetailDiv.insertAdjacentElement('beforeend', packageNameDiv)
+          testDetailDiv.insertAdjacentElement('beforeend', testFileNameDiv)
+          testOutputDiv.insertAdjacentElement('afterbegin', consolePre)
+          testOutputDiv.insertAdjacentElement('beforeend', testDetailDiv)
+          target.insertAdjacentElement('beforeend', testOutputDiv)
+
+          if (testStatus.Passed) {
+            consolePre.classList.remove('skipped')
+            consolePre.classList.remove('failed')
+          } else if (testStatus.Skipped) {
+            consolePre.classList.add('skipped')
+            consolePre.classList.remove('failed')
+          } else {
+            consolePre.classList.remove('skipped')
+            consolePre.classList.add('failed')
+          }
+          consolePre.textContent = testStatus.Output.join('')
+        } else {
+          testOutputDiv.remove()
+        }
+      }
+    }
+  }
+
+  //+------------------------+
+  //|    setup DOM events    |
+  //+------------------------+
+  elements.testResultsElem
+          .addEventListener('click', event =>
+            goTestReport.testResultsClickHandler(/**@type {HTMLElement}*/ addEventData(event).data.target,
+                                                 event.shiftKey,
+                                                 elements.data,
+                                                 selectedItems,
+                                                 goTestReport.testGroupListHandler))
+
+  elements.testGroupListElem
+          .addEventListener('click', event =>
+            goTestReport.testGroupListHandler(/**@type {Element}*/ event.target,
+                                              elements.data))
+
+  return goTestReport
+}
+
+
+    
+
+    const data = [{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestAccountPostgres_AuthorizeAccount","Package":"neatly/internal/repository/psql","ElapsedTime":0.09,"Output":["","=== RUN   TestAccountPostgres_AuthorizeAccount\n","--- PASS: TestAccountPostgres_AuthorizeAccount (0.09s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":70,"Col":1}},{"TestName":"TestAccountPostgres_AuthorizeAccount/AccountDoesNotExist","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestAccountPostgres_AuthorizeAccount/AccountDoesNotExist\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"{0 Test test2 test testtest $2a$04$PKh5d/hESqLt9vXZQc2/auUbkAaagG/o2XkgJkNVkWPx6DTD.YF22}\" func=\"psql_test.go:111\" file=\"neatly/internal/repository/psql.TestAccountPostgres_AuthorizeAccount.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"sql: no rows in result set\" func=\"psql_test.go:113\" file=\"neatly/internal/repository/psql.TestAccountPostgres_AuthorizeAccount.func1()\"\n","--- PASS: TestAccountPostgres_AuthorizeAccount/AccountDoesNotExist (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccountPostgres_AuthorizeAccount/AccountExists","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestAccountPostgres_AuthorizeAccount/AccountExists\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"{0 Test TestTest test testtest $2a$04$PKh5d/hESqLt9vXZQc2/auUbkAaagG/o2XkgJkNVkWPx6DTD.YF22}\" func=\"psql_test.go:111\" file=\"neatly/internal/repository/psql.TestAccountPostgres_AuthorizeAccount.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:113\" file=\"neatly/internal/repository/psql.TestAccountPostgres_AuthorizeAccount.func1()\"\n","--- PASS: TestAccountPostgres_AuthorizeAccount/AccountExists (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccountPostgres_CreateAccount","Package":"neatly/internal/repository/psql","ElapsedTime":0.07,"Output":["","=== RUN   TestAccountPostgres_CreateAccount\n","--- PASS: TestAccountPostgres_CreateAccount (0.07s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":17,"Col":1}},{"TestName":"TestAccountPostgres_CreateAccount/AccountAlreadyExists","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestAccountPostgres_CreateAccount/AccountAlreadyExists\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"{0 Test TestTest test testtest $2a$04$a1EkfxRJIhUyi1N.vOGQjevgUWHxk2LZ903/vLwIdvpcvN8EfHTG2}\" func=\"psql_test.go:56\" file=\"neatly/internal/repository/psql.TestAccountPostgres_CreateAccount.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Internal error: UNIQUE constraint failed: users.username\" func=\"account.go:29\" file=\"neatly/internal/repository/psql.(*AccountPostgres).CreateAccount()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"UNIQUE constraint failed: users.username\" func=\"psql_test.go:58\" file=\"neatly/internal/repository/psql.TestAccountPostgres_CreateAccount.func1()\"\n","--- PASS: TestAccountPostgres_CreateAccount/AccountAlreadyExists (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccountPostgres_CreateAccount/AccountCreated","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestAccountPostgres_CreateAccount/AccountCreated\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"{0 Test TestTest test testtest $2a$04$a1EkfxRJIhUyi1N.vOGQjevgUWHxk2LZ903/vLwIdvpcvN8EfHTG2}\" func=\"psql_test.go:56\" file=\"neatly/internal/repository/psql.TestAccountPostgres_CreateAccount.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:58\" file=\"neatly/internal/repository/psql.TestAccountPostgres_CreateAccount.func1()\"\n","--- PASS: TestAccountPostgres_CreateAccount/AccountCreated (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccountPostgres_GetOne","Package":"neatly/internal/repository/psql","ElapsedTime":0.11,"Output":["","=== RUN   TestAccountPostgres_GetOne\n","--- PASS: TestAccountPostgres_GetOne (0.11s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":124,"Col":1}},{"TestName":"TestAccountPostgres_GetOne/AccountDoesNotExist","Package":"neatly/internal/repository/psql","ElapsedTime":0.03,"Output":["","=== RUN   TestAccountPostgres_GetOne/AccountDoesNotExist\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=0 func=\"psql_test.go:165\" file=\"neatly/internal/repository/psql.TestAccountPostgres_GetOne.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"sql: no rows in result set\" func=\"psql_test.go:167\" file=\"neatly/internal/repository/psql.TestAccountPostgres_GetOne.func1()\"\n","--- PASS: TestAccountPostgres_GetOne/AccountDoesNotExist (0.03s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccountPostgres_GetOne/AccountExists","Package":"neatly/internal/repository/psql","ElapsedTime":0.08,"Output":["","=== RUN   TestAccountPostgres_GetOne/AccountExists\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=1 func=\"psql_test.go:165\" file=\"neatly/internal/repository/psql.TestAccountPostgres_GetOne.func1()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:167\" file=\"neatly/internal/repository/psql.TestAccountPostgres_GetOne.func1()\"\n","--- PASS: TestAccountPostgres_GetOne/AccountExists (0.08s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_Create","Package":"neatly/internal/repository/psql","ElapsedTime":0.06,"Output":["","=== RUN   TestNotePostgres_Create\n","--- PASS: TestNotePostgres_Create (0.06s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":178,"Col":1}},{"TestName":"TestNotePostgres_Create/NoteCreatedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.06,"Output":["","=== RUN   TestNotePostgres_Create/NoteCreatedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:215\" file=\"neatly/internal/repository/psql.TestNotePostgres_Create.func1()\"\n","--- PASS: TestNotePostgres_Create/NoteCreatedSuccessfully (0.06s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_Delete","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestNotePostgres_Delete\n","--- PASS: TestNotePostgres_Delete (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":329,"Col":1}},{"TestName":"TestNotePostgres_Delete/NoteDeletedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestNotePostgres_Delete/NoteDeletedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:366\" file=\"neatly/internal/repository/psql.TestNotePostgres_Delete.func1()\"\n","--- PASS: TestNotePostgres_Delete/NoteDeletedSuccessfully (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_GetAll","Package":"neatly/internal/repository/psql","ElapsedTime":0.03,"Output":["","=== RUN   TestNotePostgres_GetAll\n","--- PASS: TestNotePostgres_GetAll (0.03s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":226,"Col":1}},{"TestName":"TestNotePostgres_GetAll/NotesCollectedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.03,"Output":["","=== RUN   TestNotePostgres_GetAll/NotesCollectedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:260\" file=\"neatly/internal/repository/psql.TestNotePostgres_GetAll.func1()\"\n","--- PASS: TestNotePostgres_GetAll/NotesCollectedSuccessfully (0.03s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_GetOne","Package":"neatly/internal/repository/psql","ElapsedTime":0.09,"Output":["","=== RUN   TestNotePostgres_GetOne\n","--- PASS: TestNotePostgres_GetOne (0.09s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":271,"Col":1}},{"TestName":"TestNotePostgres_GetOne/NotCanNotBeFound","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestNotePostgres_GetOne/NotCanNotBeFound\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Internal error: sql: no rows in result set\" func=\"note.go:89\" file=\"neatly/internal/repository/psql.(*NotePostgres).GetOne()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"note does not exist or does not belong to user\" func=\"psql_test.go:318\" file=\"neatly/internal/repository/psql.TestNotePostgres_GetOne.func1()\"\n","--- PASS: TestNotePostgres_GetOne/NotCanNotBeFound (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_GetOne/NoteCollectedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestNotePostgres_GetOne/NoteCollectedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:318\" file=\"neatly/internal/repository/psql.TestNotePostgres_GetOne.func1()\"\n","--- PASS: TestNotePostgres_GetOne/NoteCollectedSuccessfully (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestNotePostgres_Update","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestNotePostgres_Update\n","--- PASS: TestNotePostgres_Update (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":377,"Col":1}},{"TestName":"TestNotePostgres_Update/NoteUpdatedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.04,"Output":["","=== RUN   TestNotePostgres_Update/NoteUpdatedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:419\" file=\"neatly/internal/repository/psql.TestNotePostgres_Update.func1()\"\n","--- PASS: TestNotePostgres_Update/NoteUpdatedSuccessfully (0.04s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]},{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestService_Create","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Create\n","--- PASS: TestService_Create (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":17,"Col":1}},{"TestName":"TestService_Create","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Create\n","--- PASS: TestService_Create (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":16,"Col":1}},{"TestName":"TestService_Create/CreateNoteFailure","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/CreateNoteFailure\n","--- PASS: TestService_Create/CreateNoteFailure (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Create/CreateNoteSuccessful","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/CreateNoteSuccessful\n","--- PASS: TestService_Create/CreateNoteSuccessful (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Create/NoteNotFound","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/NoteNotFound\n","--- PASS: TestService_Create/NoteNotFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Create/TagIsNotUniqueAndAssigned","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/TagIsNotUniqueAndAssigned\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Found matching tag with id 0\" func=\"serivce.go:141\" file=\"neatly/internal/service/tag.(*Service).checkIfUnique()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with ID 0 is not unique\" func=\"serivce.go:34\" file=\"neatly/internal/service/tag.(*Service).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Found matching tag 0 assigned to note 0\" func=\"serivce.go:156\" file=\"neatly/internal/service/tag.(*Service).checkIfAssigned()\"\n","--- PASS: TestService_Create/TagIsNotUniqueAndAssigned (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Create/TagIsNotUniqueAndNotAssigned","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/TagIsNotUniqueAndNotAssigned\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Found matching tag with id 0\" func=\"serivce.go:141\" file=\"neatly/internal/service/tag.(*Service).checkIfUnique()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with ID 0 is not unique\" func=\"serivce.go:34\" file=\"neatly/internal/service/tag.(*Service).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with ID 0 is not assigned to note 0\" func=\"serivce.go:40\" file=\"neatly/internal/service/tag.(*Service).Create()\"\n","--- PASS: TestService_Create/TagIsNotUniqueAndNotAssigned (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Create/TagIsUniqueAndNotAssigned","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Create/TagIsUniqueAndNotAssigned\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with ID 0 is inuque and will be assigned to note with ID 0\" func=\"serivce.go:49\" file=\"neatly/internal/service/tag.(*Service).Create()\"\n","--- PASS: TestService_Create/TagIsUniqueAndNotAssigned (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_CreateAccount","Package":"neatly/internal/service/account","ElapsedTime":0.01,"Output":["","=== RUN   TestService_CreateAccount\n","--- PASS: TestService_CreateAccount (0.01s)",""],"Passed":true,"Skipped":false,"TestFileName":"account_test.go","TestFunctionDetail":{"Line":34,"Col":1}},{"TestName":"TestService_CreateAccount/UserAlreadyExists","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_CreateAccount/UserAlreadyExists\n","--- PASS: TestService_CreateAccount/UserAlreadyExists (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_CreateAccount/ValidAccountRegistration","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_CreateAccount/ValidAccountRegistration\n","--- PASS: TestService_CreateAccount/ValidAccountRegistration (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Delete","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Delete\n","--- PASS: TestService_Delete (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":358,"Col":1}},{"TestName":"TestService_Delete","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Delete\n","--- PASS: TestService_Delete (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":271,"Col":1}},{"TestName":"TestService_Delete/DeletedSuccessfully","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Delete/DeletedSuccessfully\n","--- PASS: TestService_Delete/DeletedSuccessfully (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Delete/DeletedSuccessfully","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Delete/DeletedSuccessfully\n","--- PASS: TestService_Delete/DeletedSuccessfully (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Delete/NoteNotFound","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Delete/NoteNotFound\n","--- PASS: TestService_Delete/NoteNotFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Detach","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Detach\n","--- PASS: TestService_Detach (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":400,"Col":1}},{"TestName":"TestService_Detach/NoteNotFound","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Detach/NoteNotFound\n","--- PASS: TestService_Detach/NoteNotFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Detach/TagAttachedToFittingNoteAndShouldBeDeleted","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Detach/TagAttachedToFittingNoteAndShouldBeDeleted\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Detaching tag...\" func=\"serivce.go:110\" file=\"neatly/internal/service/tag.(*Service).Detach()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag is attached to one note and should be deleted.\" func=\"serivce.go:131\" file=\"neatly/internal/service/tag.(*Service).Detach()\"\n","--- PASS: TestService_Detach/TagAttachedToFittingNoteAndShouldBeDeleted (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Detach/TagAttachedToFittingNoteAndShouldNotBeDeleted","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Detach/TagAttachedToFittingNoteAndShouldNotBeDeleted\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Detaching tag...\" func=\"serivce.go:110\" file=\"neatly/internal/service/tag.(*Service).Detach()\"\n","--- PASS: TestService_Detach/TagAttachedToFittingNoteAndShouldNotBeDeleted (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]},{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestService_Detach/TagAttachedToNonFittingNote","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Detach/TagAttachedToNonFittingNote\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag is not attached to this note.\" func=\"serivce.go:113\" file=\"neatly/internal/service/tag.(*Service).Detach()\"\n","--- PASS: TestService_Detach/TagAttachedToNonFittingNote (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_FindByTags","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags\n","--- PASS: TestService_FindByTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":319,"Col":1}},{"TestName":"TestService_FindByTags/GetNoteError","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags/GetNoteError\n","--- PASS: TestService_FindByTags/GetNoteError (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_FindByTags/GetTagError","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags/GetTagError\n","--- PASS: TestService_FindByTags/GetTagError (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_FindByTags/UserHasNoNotes","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags/UserHasNoNotes\n","--- PASS: TestService_FindByTags/UserHasNoNotes (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_FindByTags/UserHasNoteWithNoTags","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags/UserHasNoteWithNoTags\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Found tags from note 0: []\" func=\"service.go:103\" file=\"neatly/internal/service/note.(*Service).FindByTags()\"\n","--- PASS: TestService_FindByTags/UserHasNoteWithNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_FindByTags/UserHasNoteWithTagThatSuits","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_FindByTags/UserHasNoteWithTagThatSuits\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Found tags from note 0: [{0 test }]\" func=\"service.go:103\" file=\"neatly/internal/service/note.(*Service).FindByTags()\"\n","--- PASS: TestService_FindByTags/UserHasNoteWithTagThatSuits (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GenerateJWT","Package":"neatly/internal/service/account","ElapsedTime":0.01,"Output":["","=== RUN   TestService_GenerateJWT\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Reading application config from ../../../etc/config/local.yml\" func=\"config.go:47\" file=\"neatly/internal/session.GetConfig.func1()\"\n","--- PASS: TestService_GenerateJWT (0.01s)",""],"Passed":true,"Skipped":false,"TestFileName":"account_test.go","TestFunctionDetail":{"Line":85,"Col":1}},{"TestName":"TestService_GenerateJWT/AuthorizeSuccessful","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_GenerateJWT/AuthorizeSuccessful\n","--- PASS: TestService_GenerateJWT/AuthorizeSuccessful (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GenerateJWT/PasswordDoesNotMatch","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_GenerateJWT/PasswordDoesNotMatch\n","--- PASS: TestService_GenerateJWT/PasswordDoesNotMatch (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll\n","--- PASS: TestService_GetAll (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":124,"Col":1}},{"TestName":"TestService_GetAll","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll\n","--- PASS: TestService_GetAll (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":68,"Col":1}},{"TestName":"TestService_GetAll/FoundAtLeastOneTag","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/FoundAtLeastOneTag\n","--- PASS: TestService_GetAll/FoundAtLeastOneTag (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/FoundNoTags","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/FoundNoTags\n","--- PASS: TestService_GetAll/FoundNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/GetNoteError","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/GetNoteError\n","--- PASS: TestService_GetAll/GetNoteError (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/GetTagError","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/GetTagError\n","--- PASS: TestService_GetAll/GetTagError (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/UserHasNoNotes","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/UserHasNoNotes\n","--- PASS: TestService_GetAll/UserHasNoNotes (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/UserHasNoteWithNoTags","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/UserHasNoteWithNoTags\n","--- PASS: TestService_GetAll/UserHasNoteWithNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAll/UserHasNoteWithTag","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAll/UserHasNoteWithTag\n","--- PASS: TestService_GetAll/UserHasNoteWithTag (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAllByNote","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAllByNote\n","--- PASS: TestService_GetAllByNote (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":174,"Col":1}}]},{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestService_GetAllByNote/FoundAtLeastOneTag","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAllByNote/FoundAtLeastOneTag\n","--- PASS: TestService_GetAllByNote/FoundAtLeastOneTag (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetAllByNote/FoundNoTags","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetAllByNote/FoundNoTags\n","--- PASS: TestService_GetAllByNote/FoundNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne\n","--- PASS: TestService_GetOne (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":226,"Col":1}},{"TestName":"TestService_GetOne","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne\n","--- PASS: TestService_GetOne (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":175,"Col":1}},{"TestName":"TestService_GetOne","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne\n","--- PASS: TestService_GetOne (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"account_test.go","TestFunctionDetail":{"Line":142,"Col":1}},{"TestName":"TestService_GetOne/AccountFound","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/AccountFound\n","--- PASS: TestService_GetOne/AccountFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/AccountNotFound","Package":"neatly/internal/service/account","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/AccountNotFound\n","--- PASS: TestService_GetOne/AccountNotFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/FoundNoTags","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/FoundNoTags\n","--- PASS: TestService_GetOne/FoundNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/FoundTag","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/FoundTag\n","--- PASS: TestService_GetOne/FoundTag (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/GetTagError","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/GetTagError\n","--- PASS: TestService_GetOne/GetTagError (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/UserHasNoNotes","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/UserHasNoNotes\n","--- PASS: TestService_GetOne/UserHasNoNotes (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/UserHasNoteWithNoTags","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/UserHasNoteWithNoTags\n","--- PASS: TestService_GetOne/UserHasNoteWithNoTags (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_GetOne/UserHasNoteWithTag","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_GetOne/UserHasNoteWithTag\n","--- PASS: TestService_GetOne/UserHasNoteWithTag (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Update","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Update\n","--- PASS: TestService_Update (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"tag_test.go","TestFunctionDetail":{"Line":278,"Col":1}},{"TestName":"TestService_Update","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Update\n","--- PASS: TestService_Update (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"note_test.go","TestFunctionDetail":{"Line":429,"Col":1}},{"TestName":"TestService_Update/NeedColorUpdate","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/NeedColorUpdate\n","--- PASS: TestService_Update/NeedColorUpdate (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Update/NeedNameUpdate","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/NeedNameUpdate\n","--- PASS: TestService_Update/NeedNameUpdate (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Update/NoteDoesNotExist","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/NoteDoesNotExist\n","--- PASS: TestService_Update/NoteDoesNotExist (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Update/NoteUpdatedWithBody","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/NoteUpdatedWithBody\n","--- PASS: TestService_Update/NoteUpdatedWithBody (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestService_Update/NoteUpdatedWithoutBody","Package":"neatly/internal/service/note","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/NoteUpdatedWithoutBody\n","--- PASS: TestService_Update/NoteUpdatedWithoutBody (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]},{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestService_Update/TagNotFound","Package":"neatly/internal/service/tag","ElapsedTime":0,"Output":["","=== RUN   TestService_Update/TagNotFound\n","--- PASS: TestService_Update/TagNotFound (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_Assign","Package":"neatly/internal/repository/psql","ElapsedTime":0.06,"Output":["","=== RUN   TestTagPostgres_Assign\n","--- PASS: TestTagPostgres_Assign (0.06s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":488,"Col":1}},{"TestName":"TestTagPostgres_Assign/TagAssignedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestTagPostgres_Assign/TagAssignedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with id 0 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Assigning tag with id 1 to note with id with id 1\" func=\"tag.go:52\" file=\"neatly/internal/repository/psql.(*TagPostgres).Assign()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:537\" file=\"neatly/internal/repository/psql.TestTagPostgres_Assign.func1()\"\n","--- PASS: TestTagPostgres_Assign/TagAssignedSuccessfully (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_Create","Package":"neatly/internal/repository/psql","ElapsedTime":0.07,"Output":["","=== RUN   TestTagPostgres_Create\n","--- PASS: TestTagPostgres_Create (0.07s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":430,"Col":1}},{"TestName":"TestTagPostgres_Create/TagCreatedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.07,"Output":["","=== RUN   TestTagPostgres_Create/TagCreatedSuccessfully\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Tag with id 0 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:43+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:477\" file=\"neatly/internal/repository/psql.TestTagPostgres_Create.func1()\"\n","--- PASS: TestTagPostgres_Create/TagCreatedSuccessfully (0.07s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_GetAll","Package":"neatly/internal/repository/psql","ElapsedTime":0.11,"Output":["","=== RUN   TestTagPostgres_GetAll\n","--- PASS: TestTagPostgres_GetAll (0.11s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":548,"Col":1}},{"TestName":"TestTagPostgres_GetAll/TagsCollectedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.11,"Output":["","=== RUN   TestTagPostgres_GetAll/TagsCollectedSuccessfully\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Tag with id 0 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:597\" file=\"neatly/internal/repository/psql.TestTagPostgres_GetAll.func1()\"\n","--- PASS: TestTagPostgres_GetAll/TagsCollectedSuccessfully (0.11s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_GetAllByNote","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestTagPostgres_GetAllByNote\n","--- PASS: TestTagPostgres_GetAllByNote (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":608,"Col":1}},{"TestName":"TestTagPostgres_GetAllByNote/TagsCollectedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.05,"Output":["","=== RUN   TestTagPostgres_GetAllByNote/TagsCollectedSuccessfully\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Tag with id 0 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:657\" file=\"neatly/internal/repository/psql.TestTagPostgres_GetAllByNote.func1()\"\n","--- PASS: TestTagPostgres_GetAllByNote/TagsCollectedSuccessfully (0.05s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_GetOne","Package":"neatly/internal/repository/psql","ElapsedTime":0.18,"Output":["","=== RUN   TestTagPostgres_GetOne\n","--- PASS: TestTagPostgres_GetOne (0.18s)",""],"Passed":true,"Skipped":false,"TestFileName":"psql_test.go","TestFunctionDetail":{"Line":668,"Col":1}},{"TestName":"TestTagPostgres_GetOne/TagCollectedSuccessfully","Package":"neatly/internal/repository/psql","ElapsedTime":0.06,"Output":["","=== RUN   TestTagPostgres_GetOne/TagCollectedSuccessfully\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Tag with id 0 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Assigning tag with id 1 to note with id with id 1\" func=\"tag.go:52\" file=\"neatly/internal/repository/psql.(*TagPostgres).Assign()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"\u003cnil\u003e\" func=\"psql_test.go:732\" file=\"neatly/internal/repository/psql.TestTagPostgres_GetOne.func1()\"\n","--- PASS: TestTagPostgres_GetOne/TagCollectedSuccessfully (0.06s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestTagPostgres_GetOne/TagNotFound","Package":"neatly/internal/repository/psql","ElapsedTime":0.12,"Output":["","=== RUN   TestTagPostgres_GetOne/TagNotFound\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Tag with id 1 created\" func=\"tag.go:30\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Connecting tag with id 1 and accounts with id with id 1\" func=\"tag.go:39\" file=\"neatly/internal/repository/psql.(*TagPostgres).Create()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"Internal error: sql: no rows in result set\" func=\"tag.go:107\" file=\"neatly/internal/repository/psql.(*TagPostgres).GetOne()\"\n","time=\"2022-11-12T16:07:44+03:00\" level=info msg=\"tag does not exist or does not belong to user\" func=\"psql_test.go:732\" file=\"neatly/internal/repository/psql.TestTagPostgres_GetOne.func1()\"\n","--- PASS: TestTagPostgres_GetOne/TagNotFound (0.12s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]}]
+
+    const report = window.GoTestReport({
+                                         data: data,
+                                         testResultsElem: document.getElementById('testResults'),
+                                         testGroupListElem: document.getElementById('testGroupList')
+                                       });
+
+
+</script>
+</body>
+</html>

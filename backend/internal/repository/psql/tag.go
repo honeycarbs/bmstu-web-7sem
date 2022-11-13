@@ -38,8 +38,8 @@ func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 
 	r.logger.Infof("Connecting tag with id %v and accounts with id with id %v", t.ID, userID)
 	userTagQuery := `INSERT INTO users_tags (users_id, tags_id)
-				SELECT $1, $2 WHERE NOT EXISTS (
-    			    SELECT users_id, tags_id FROM users_tags WHERE users_id = $1 AND tags_id = $2
+				    SELECT $1, $2 WHERE NOT EXISTS (
+    			       SELECT users_id, tags_id FROM users_tags WHERE users_id = $1 AND tags_id = $2
     			)`
 	_, err = tx.Exec(userTagQuery, userID, t.ID)
 	if err != nil {
