@@ -19,7 +19,7 @@ func TestService_Create(t *testing.T) {
 
 	testTag := mother.TagMother()
 	testTagUnique := testTag
-	testTagUnique.Name = "unique"
+	testTagUnique.Label = "unique"
 
 	testNote := mother.NoteMother()
 
@@ -279,11 +279,11 @@ func TestService_Update(t *testing.T) {
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, tagID int)
 
 	testTagBeforeUpdate := mother.TagMother()
-	testTagBeforeUpdate.Name = "old name"
+	testTagBeforeUpdate.Label = "old name"
 	testTagBeforeUpdate.Color = "old color"
 
 	testTagNameUpdate := mother.TagMother()
-	testTagNameUpdate.Name = "new name"
+	testTagNameUpdate.Label = "new name"
 
 	testTagNameUpdateFull := testTagNameUpdate
 	testTagNameUpdateFull.Color = testTagBeforeUpdate.Color
@@ -292,7 +292,7 @@ func TestService_Update(t *testing.T) {
 	testTagColorUpdate.Color = "new color"
 
 	testTagColorUpdateFull := testTagColorUpdate
-	testTagColorUpdateFull.Name = testTagBeforeUpdate.Name
+	testTagColorUpdateFull.Label = testTagBeforeUpdate.Label
 
 	testSuites := []struct {
 		testName          string
@@ -402,7 +402,7 @@ func TestService_Detach(t *testing.T) {
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, NoteID, tagID int)
 
 	testTag := mother.TagMother()
-	testTag.Name = "name"
+	testTag.Label = "name"
 
 	testNoteNoTag := mother.NoteMother()
 	testNoteNoTag.ID = 1

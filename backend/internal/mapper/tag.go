@@ -17,7 +17,7 @@ func NewTagMapper(logger logging.Logger) *TagMapper {
 func (m *TagMapper) MapCreateTagDTO(dto dto.CreateTagDTO) model.Tag {
 	return model.Tag{
 		ID:    0,
-		Name:  dto.Name,
+		Label: dto.Name,
 		Color: dto.Color,
 	}
 }
@@ -25,7 +25,7 @@ func (m *TagMapper) MapCreateTagDTO(dto dto.CreateTagDTO) model.Tag {
 func (m *TagMapper) MapUpdateTagDTO(dto dto.UpdateTagDTO) model.Tag {
 	return model.Tag{
 		ID:    0,
-		Name:  dto.Name,
+		Label: dto.Name,
 		Color: dto.Color,
 	}
 }

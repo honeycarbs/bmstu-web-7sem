@@ -15,7 +15,7 @@ type Note struct {
 	Header    string    `json:"header" db:"header"`
 	Body      string    `json:"body" db:"body"`
 	ShortBody string    `json:"shortBody" db:"short_body"`
-	Tags      []Tag     `json:"tags" db:"tags"` // []tag.Tag
+	Tags      []Tag     `json:"tags" db:"tags"`
 	Color     string    `json:"color" db:"color"`
 	Edited    time.Time `json:"edited"`
 }
@@ -39,7 +39,7 @@ func (n *Note) HasEveryTag(tagNames []string) bool {
 
 func (n *Note) HasSpecificTag(tagName string) bool {
 	for _, t := range n.Tags {
-		if strings.Contains(strings.ToLower(t.Name), strings.ToLower(tagName)) {
+		if strings.Contains(strings.ToLower(t.Label), strings.ToLower(tagName)) {
 			return true
 		}
 	}

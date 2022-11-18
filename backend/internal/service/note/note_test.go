@@ -323,7 +323,7 @@ func TestService_FindByTags(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	testTag := mother.TagMother()
-	testTag.Name = "test"
+	testTag.Label = "test"
 
 	testNoteWithoutTags := testNote
 	testNoteWithoutTags.Tags = []model.Tag{}

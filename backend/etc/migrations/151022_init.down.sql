@@ -1,13 +1,13 @@
-DROP TABLE users;
+DROP TABLE users CASCADE;
 
-DROP TABLE notes;
+DROP TABLE notes CASCADE;
 
-DROP TABLE notes_body;
+DROP TABLE notes_body CASCADE;
 
-DROP TABLE users_notes;
+DROP TABLE users_notes CASCADE;
 
-DROP TABLE tags;
+DROP TABLE tags CASCADE;
 
-DROP TABLE tags_notes;
+DROP TABLE tags_notes CASCADE;
 
-DROP TABLE users_tags;
+DROP TABLE users_tags CASCADE;

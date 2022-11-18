@@ -48,7 +48,7 @@ func NewClient(cfg session.DB) (*Client, error) {
 
 func NewTestClient() (*Client, error) {
 	logging.Init()
-	db, err := sqlx.Open("sqlite3", "file:testdb/test.db?parseTime=true")
+	db, err := sqlx.Open("sqlite3", "file:testdb/test.db")
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +77,7 @@ func TestClientClose(client *Client) error {
 }
 
 func runUpMigration(db *sqlx.DB, dbname string, migrationsPath string) error {
+	logging.GetLogger().Info("Running UP migration...")
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
 	if err != nil {
 		return err

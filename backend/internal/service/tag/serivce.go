@@ -80,8 +80,8 @@ func (s *Service) Update(userID, tagID int, t model.Tag) error {
 	if t.Color == "" {
 		t.Color = tp.Color
 	}
-	if t.Name == "" {
-		t.Name = tp.Name
+	if t.Label == "" {
+		t.Label = tp.Label
 	}
 
 	return s.tagsRepository.Update(userID, tagID, t)
@@ -106,7 +106,7 @@ func (s *Service) Detach(userID, tagID, noteID int) error {
 		attachedToMany = false
 	)
 
-	if inNote.HasSpecificTag(inTag.Name) {
+	if inNote.HasSpecificTag(inTag.Label) {
 		s.logger.Info("Detaching tag...")
 		err = s.tagsRepository.Detach(userID, tagID, noteID)
 	} else {
@@ -121,7 +121,7 @@ func (s *Service) Detach(userID, tagID, noteID int) error {
 	for _, n := range ns {
 		if n.ID != noteID {
 			n.Tags, err = s.tagsRepository.GetAllByNote(userID, n.ID)
-			if n.HasSpecificTag(inTag.Name) {
+			if n.HasSpecificTag(inTag.Label) {
 				attachedToMany = true
 			}
 		}
@@ -137,7 +137,7 @@ func (s *Service) Detach(userID, tagID, noteID int) error {
 
 func (s *Service) checkIfUnique(tags []model.Tag, tu model.Tag) (bool, int) {
 	for _, t := range tags {
-		if strings.Compare(t.Name, tu.Name) == 0 {
+		if strings.Compare(t.Label, tu.Label) == 0 {
 			s.logger.Infof("Found matching tag with id %v", t.ID)
 			return false, t.ID
 		}
