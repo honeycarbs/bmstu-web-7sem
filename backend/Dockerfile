@@ -7,7 +7,7 @@ ENV GOPATH=/
 COPY ./ ./
 
 # install psql
-RUN apk update
+RUN apk update && apk add --no-cache gcc && apk add build-base
 RUN apk add postgresql-client
 
 # make wait-for-postgres.sh executable
