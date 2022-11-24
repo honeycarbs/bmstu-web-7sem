@@ -1,4 +1,4 @@
-package test
+package service
 
 //var (
 //	insertAccountQuery = "INSERT INTO users (name, username, email, password_hash) VALUES ('%v', '%v', '%v', '%v') RETURNING id"
