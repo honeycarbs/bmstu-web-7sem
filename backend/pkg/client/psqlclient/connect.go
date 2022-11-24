@@ -48,7 +48,7 @@ func NewClient(cfg session.DB) (*Client, error) {
 
 func NewTestClient() (*Client, error) {
 	logging.Init()
-	db, err := sqlx.Open("sqlite3", "file:testdb/test.db")
+	db, err := sqlx.Open("sqlite3", "file:db/test.db")
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func runTestUpMigration(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance("file://testdb", "neatly", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://db", "neatly", driver)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func RunTestDownMigration(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance("file://testdb", "neatly", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://db", "neatly", driver)
 	if err != nil {
 		return err
 	}
