@@ -1,4 +1,4 @@
-package test
+package sqlite_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
 	"neatly/internal/repository/psql"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
 	"testing"
 )
@@ -34,11 +34,11 @@ func TestTagPostgres_Create(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -92,11 +92,11 @@ func TestTagPostgres_Assign(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -152,11 +152,11 @@ func TestTagPostgres_GetAll(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -212,11 +212,11 @@ func TestTagPostgres_GetAllByNote(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -282,11 +282,11 @@ func TestTagPostgres_GetOne(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()

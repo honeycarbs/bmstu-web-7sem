@@ -1,4 +1,4 @@
-package psqlclient
+package dbclient
 
 import (
 	"github.com/golang-migrate/migrate/v4"
@@ -9,7 +9,7 @@ import (
 )
 
 func runUpMigration(db *sqlx.DB, dbname string, migrationsPath string) error {
-	logging.GetLogger().Info("Running UP migration...")
+	//logging.GetLogger().Info("Running UP migration...")
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
 	if err != nil {
 		return err

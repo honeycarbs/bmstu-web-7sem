@@ -16,7 +16,7 @@ import (
 	"neatly/internal/repository"
 	"neatly/internal/service"
 	"neatly/internal/session"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
 )
 
@@ -35,7 +35,7 @@ func main() {
 	logger := logging.GetLogger()
 	cfg := session.GetConfig()
 
-	client, err := psqlclient.NewClient(cfg.DB)
+	client, err := dbclient.NewClient(cfg.DB)
 	if err != nil {
 		logger.Fatal(err)
 	}

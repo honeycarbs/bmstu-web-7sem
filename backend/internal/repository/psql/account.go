@@ -3,7 +3,7 @@ package psql
 import (
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
 )
 
@@ -12,7 +12,7 @@ type AccountPostgres struct {
 	logger logging.Logger
 }
 
-func NewAccountPostgres(client *psqlclient.Client, logger logging.Logger) *AccountPostgres {
+func NewAccountPostgres(client *dbclient.Client, logger logging.Logger) *AccountPostgres {
 	return &AccountPostgres{
 		db:     client.DB,
 		logger: logger,

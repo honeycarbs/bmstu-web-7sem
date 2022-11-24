@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
 )
@@ -14,7 +14,7 @@ type TagPostgres struct {
 	logger logging.Logger
 }
 
-func NewTagPostgres(client *psqlclient.Client, logger logging.Logger) *TagPostgres {
+func NewTagPostgres(client *dbclient.Client, logger logging.Logger) *TagPostgres {
 	return &TagPostgres{db: client.DB, logger: logger}
 }
 

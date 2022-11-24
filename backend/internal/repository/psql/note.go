@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"time"
@@ -15,7 +15,7 @@ type NotePostgres struct {
 	logger logging.Logger
 }
 
-func NewNotePostgres(client *psqlclient.Client, logger logging.Logger) *NotePostgres {
+func NewNotePostgres(client *dbclient.Client, logger logging.Logger) *NotePostgres {
 	return &NotePostgres{
 		db:     client.DB,
 		logger: logger,

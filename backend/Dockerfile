@@ -8,7 +8,7 @@ COPY ./ ./
 
 # install psql
 RUN apk update && apk add --no-cache gcc && apk add build-base
-RUN apk add postgresql-client
+RUN apk add postgresql-dbclient
 
 # make wait-for-postgres.sh executable
 RUN chmod +x wait-for-postgres.sh

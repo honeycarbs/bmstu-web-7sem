@@ -3,7 +3,7 @@ package repository
 import (
 	"neatly/internal/model"
 	"neatly/internal/repository/psql"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
 )
 
@@ -19,7 +19,7 @@ type AccountRepositoryImpl struct {
 	AccountRepository
 }
 
-func NewAccountRepositoryImpl(client *psqlclient.Client, logger logging.Logger) *AccountRepositoryImpl {
+func NewAccountRepositoryImpl(client *dbclient.Client, logger logging.Logger) *AccountRepositoryImpl {
 	return &AccountRepositoryImpl{
 		AccountRepository: psql.NewAccountPostgres(client, logger),
 	}
@@ -37,7 +37,7 @@ type NoteRepositoryImpl struct {
 	NoteRepository
 }
 
-func NewNoteRepositoryImpl(client *psqlclient.Client, logger logging.Logger) *NoteRepositoryImpl {
+func NewNoteRepositoryImpl(client *dbclient.Client, logger logging.Logger) *NoteRepositoryImpl {
 	return &NoteRepositoryImpl{NoteRepository: psql.NewNotePostgres(client, logger)}
 }
 
@@ -56,7 +56,7 @@ type TagRepositoryImpl struct {
 	TagRepository
 }
 
-func NewTagRepositoryImpl(client *psqlclient.Client, logger logging.Logger) *TagRepositoryImpl {
+func NewTagRepositoryImpl(client *dbclient.Client, logger logging.Logger) *TagRepositoryImpl {
 	return &TagRepositoryImpl{
 		TagRepository: psql.NewTagPostgres(client, logger),
 	}

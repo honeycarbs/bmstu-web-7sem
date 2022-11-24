@@ -1,4 +1,4 @@
-package test
+package sqlite_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
 	"neatly/internal/repository/psql"
-	"neatly/pkg/client/psqlclient"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
 	"testing"
 )
@@ -39,11 +39,11 @@ func TestAccountPostgres_CreateAccount(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -94,11 +94,11 @@ func TestAccountPostgres_AuthorizeAccount(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -148,11 +148,11 @@ func TestAccountPostgres_GetOne(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := psqlclient.NewTestClient()
+			client, err := dbclient.NewTestClient()
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer psqlclient.TestClientClose(client)
+			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()

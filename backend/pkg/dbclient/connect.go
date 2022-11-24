@@ -1,10 +1,11 @@
-package psqlclient
+package dbclient
 
 import (
 	"fmt"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/ory/dockertest"
 	"neatly/internal/session"
 	"neatly/pkg/logging"
 )
@@ -58,7 +59,7 @@ func (c *Client) Close(cfg session.DB) error {
 
 func NewTestClient() (*Client, error) {
 	logging.Init()
-	db, err := sqlx.Open("sqlite3", "file:db/test.db")
+	db, err := sqlx.Open("sqlite3", "file:db/sqlite.db")
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +85,27 @@ func TestClientClose(client *Client) error {
 		return err
 	}
 	return nil
+}
+
+func NewIntegrationClinent(resource *dockertest.Resource) (*Client, error) {
+	dsn := "postgres://sqlite:pass@0.0.0.0:" + resource.GetPort("5432/tcp") + "/sqlite?sslmode=disable"
+
+	db, err := sqlx.Connect("postgres", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	err = runUpMigration(db, "sqlite", "../../etc/migrations")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		DB: db,
+	}, nil
 }

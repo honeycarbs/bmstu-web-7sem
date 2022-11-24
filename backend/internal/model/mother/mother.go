@@ -17,7 +17,7 @@ func TokenMother() string {
 
 	token, err := jwt.GenerateAccessToken(a.ID)
 	if err != nil {
-		log.Fatal("can't create test token")
+		log.Fatal("can't create sqlite token")
 	}
 
 	return token
@@ -31,7 +31,7 @@ func AccountMother() model.Account {
 		ID:           0,
 		Name:         "Test",
 		Username:     "TestTest",
-		Email:        "test",
+		Email:        "sqlite",
 		Password:     "testtest",
 		PasswordHash: testHash,
 	}
