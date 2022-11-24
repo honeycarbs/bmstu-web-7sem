@@ -35,21 +35,21 @@ func (r *NotePostgres) Create(userID int, n *model.Note) error {
 	if err := row.Scan(&n.ID); err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return e.InternalDBError
 	}
 	createNoteBodyQuery := `INSERT INTO notes_body (id, body) VALUES ($1, $2)`
 	_, err = tx.Exec(createNoteBodyQuery, n.ID, n.Body)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return e.InternalDBError
 	}
 	createUsersNoteQuery := `INSERT INTO users_notes (users_id, notes_id) VALUES ($1, $2)`
 	_, err = tx.Exec(createUsersNoteQuery, userID, n.ID)
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error(err)
-		return err
+		return e.InternalDBError
 	}
 
 	return tx.Commit()
