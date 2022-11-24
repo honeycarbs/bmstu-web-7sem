@@ -17,6 +17,8 @@ func GetTestResource() (*dbclient.Client, error) {
 			"POSTGRES_USER=sqlite",
 			"POSTGRES_PASSWORD=pass"})
 
+	resource.Expire(30)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not start resource: %s", err)
 	}
