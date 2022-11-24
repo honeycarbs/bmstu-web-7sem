@@ -5,31 +5,14 @@ import (
 	"errors"
 	"github.com/go-playground/assert/v2"
 	"github.com/golang/mock/gomock"
-	"log"
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
 	"neatly/internal/repository"
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
-	"neatly/pkg/jwt"
 	"neatly/pkg/logging"
-	"os"
 	"testing"
 )
-
-func TokenMother() string {
-	a := mother.AccountMother()
-
-	logging.Init()
-	os.Setenv("CONF_FILE", "../../../etc/config/local.yml")
-
-	token, err := jwt.GenerateAccessToken(a.ID)
-	if err != nil {
-		log.Fatal("can't create test token")
-	}
-
-	return token
-}
 
 func TestService_CreateAccount(t *testing.T) {
 	type RepoMockBehaviour func(r *mock.MockAccountRepository, a *model.Account)
@@ -104,7 +87,7 @@ func TestService_GenerateJWT(t *testing.T) {
 			},
 			outAccount:       testAccount,
 			ExpectedError:    nil,
-			ExpectedTokenVal: TokenMother(),
+			ExpectedTokenVal: mother.TokenMother(),
 		},
 		{
 			testName:  "PasswordDoesNotMatch",
