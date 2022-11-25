@@ -29,10 +29,16 @@ jobs:
           go build -o app ./cmd/main/main.go
 
       - name: Unit tests
-        run: go test -v ./... -tags=unit
+        run: |
+          cd backend
+          go test -v ./... -tags=unit
 
       - name: Unit tests
-        run: go test -v ./... -tags=integration
+        run: |
+          cd backend
+          go test -v ./... -tags=integration
 
       - name: E2E tests
-        run: go test -v ./... -tags=e2e
+        run: |
+          cd backend
+          go test -v ./... -tags=e2e
