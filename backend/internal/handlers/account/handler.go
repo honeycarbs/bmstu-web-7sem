@@ -40,17 +40,18 @@ func (h *Handler) Register(router *gin.Engine) {
 
 	auth := router.Group(groupName)
 	{
-		auth.POST(registerURL, h.register)
-		auth.POST(loginURL, h.login)
+		auth.POST(registerURL, h.RegisterAccount)
+		auth.POST(loginURL, h.Login)
 	}
 
 	accounts := router.Group(groupName, middleware.Authenticate)
 	{
-		accounts.GET("/:id", h.getAccount)
+		accounts.GET("/:id", h.GetAccount)
 	}
 }
 
-// @Summary Register
+// RegisterAccount creates account
+// @Summary RegisterAccount
 // @Tags account
 // @Description create account
 // @ID create-account
@@ -62,7 +63,7 @@ func (h *Handler) Register(router *gin.Engine) {
 // @Failure 409 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/register [post]
-func (h *Handler) register(ctx *gin.Context) {
+func (h *Handler) RegisterAccount(ctx *gin.Context) {
 	var (
 		err error
 		in  dto.RegisterAccountDTO
@@ -101,7 +102,8 @@ func (h *Handler) register(ctx *gin.Context) {
 	))
 }
 
-// @Summary getAccount
+// GetAccount
+// @Summary GetAccount
 // @Security ApiKeyAuth
 // @Tags account
 // @Description get account
@@ -114,7 +116,7 @@ func (h *Handler) register(ctx *gin.Context) {
 // @Failure 403 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/{id} [get]
-func (h *Handler) getAccount(ctx *gin.Context) {
+func (h *Handler) GetAccount(ctx *gin.Context) {
 	fromTokenID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
@@ -145,6 +147,7 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, out)
 }
 
+// Login
 // @Summary Login
 // @Tags account
 // @Description login
@@ -156,7 +159,7 @@ func (h *Handler) getAccount(ctx *gin.Context) {
 // @Failure 500 {object} e.ErrorResponse
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/login [post]
-func (h *Handler) login(ctx *gin.Context) {
+func (h *Handler) Login(ctx *gin.Context) {
 	//h.logger.Info("Got login request")
 	var loginDto dto.LoginAccountDTO
 

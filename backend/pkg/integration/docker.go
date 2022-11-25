@@ -6,7 +6,7 @@ import (
 	"neatly/pkg/dbclient"
 )
 
-func GetTestResource() (*dbclient.Client, error) {
+func GetTestResource(migrationPath string) (*dbclient.Client, error) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to docker pool: %s", err)
@@ -26,7 +26,7 @@ func GetTestResource() (*dbclient.Client, error) {
 	var cli *dbclient.Client
 
 	if err := pool.Retry(func() error {
-		cli, err = dbclient.NewIntegrationClinent(resource)
+		cli, err = dbclient.NewIntegrationClinent(resource, migrationPath)
 		if err != nil {
 			return err
 		}
