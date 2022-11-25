@@ -33,7 +33,7 @@ jobs:
           cd backend
           go test -v ./... -tags=unit
 
-      - name: Unit tests
+      - name: Integration tests
         run: |
           cd backend
           go test -v ./... -tags=integration
