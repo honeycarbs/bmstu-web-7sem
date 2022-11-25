@@ -19,10 +19,14 @@ jobs:
           go-version: 1.18
 
       - name: Get dependencies
-        run: go mod download
+        run: |
+          cd backend
+          go mod download
 
       - name: Build
-        run: go build -o app ./cmd/main/main.go
+        run: |
+          cd backend
+          go build -o app ./cmd/main/main.go
 
       - name: Unit tests
         run: go test -v ./... -tags=unit
