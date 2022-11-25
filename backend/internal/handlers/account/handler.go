@@ -69,6 +69,7 @@ func (h *Handler) RegisterAccount(ctx *gin.Context) {
 		in  dto.RegisterAccountDTO
 		a   model.Account
 	)
+	h.logger.Info("Got registration request")
 
 	if err = ctx.BindJSON(&in); err != nil {
 		h.logger.Error(err)
@@ -83,6 +84,8 @@ func (h *Handler) RegisterAccount(ctx *gin.Context) {
 		return
 	}
 
+	h.logger.Infof("CreateAccountDTO mapped: %v", a)
+
 	err = h.service.CreateAccount(&a)
 	if err != nil {
 		if errors.Is(err, e.ClientAccountError) {
@@ -92,6 +95,8 @@ func (h *Handler) RegisterAccount(ctx *gin.Context) {
 		}
 		return
 	}
+
+	h.logger.Infof("Inserted into database successfully: account id is %v", a.ID)
 
 	ctx.JSON(http.StatusCreated, fmt.Sprintf(
 		"%v/v%v%v/%v",

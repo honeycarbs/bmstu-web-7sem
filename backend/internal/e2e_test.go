@@ -76,6 +76,5 @@ func TestE2E_AccountCreateAndAuthorize(t *testing.T) {
 		assert.Equal(t, err, nil)
 
 		assert.Equal(t, a.ID, expectedUserID)
-		//t.Log(a)
 	})
 }
