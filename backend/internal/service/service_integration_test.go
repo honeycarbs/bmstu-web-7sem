@@ -9,6 +9,7 @@ import (
 	"neatly/internal/repository"
 	"neatly/internal/service/account"
 	"neatly/internal/service/note"
+	"neatly/internal/service/tag"
 	"neatly/pkg/e"
 	"neatly/pkg/integration"
 	"neatly/pkg/logging"
@@ -33,6 +34,15 @@ func prepareNoteRepo(action string, userID int, repo repository.NoteRepository) 
 	case "INSERT":
 		{
 			n := mother.NoteMother()
+			return repo.Create(userID, &n)
+		}
+	case "INSERT x2":
+		{
+			n := mother.NoteMother()
+			err := repo.Create(userID, &n)
+			if err != nil {
+				return err
+			}
 			return repo.Create(userID, &n)
 		}
 	default:
@@ -565,6 +575,511 @@ func TestIntegration_NoteUpdate(t *testing.T) {
 			un.ID = testSuite.inID
 
 			err = service.Update(1, un, false)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagCreate(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inNoteID             int
+		inTag                model.Tag
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagAssigned",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagAlreadyAssigned",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "NoteDoesNotExist",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "DO NOTHING",
+			prepareNoteAction:    "DO NOTHING",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        e.ClientNoteError,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			err = service.Create(testSuite.inUserID, testSuite.inNoteID, &testSuite.inTag)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagGetAll(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inNoteID             int
+		inTag                model.Tag
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagsFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagsNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "NoNotesFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "DO NOTHING",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			_, err = service.GetAll(testSuite.inUserID)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagGetAllByNote(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inNoteID             int
+		inTag                model.Tag
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagsFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagsNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "NoteNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "DO NOTHING",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        e.ClientNoteError,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			_, err = service.GetAllByNote(testSuite.inUserID, testSuite.inNoteID)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagGetOne(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inNoteID             int
+		inTagID              int
+		inTag                model.Tag
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagFound",
+			inUserID:             1,
+			inNoteID:             1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        e.ClientTagError,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			_, err = service.GetOne(testSuite.inUserID, testSuite.inTagID)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagUpdate(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	newTag := testTag
+	newTag.Label = "new"
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inNoteID             int
+		inTagID              int
+		inTag                model.Tag
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagFound",
+			inUserID:             1,
+			inNoteID:             1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			inTag:                testTag,
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "DO NOTHING",
+			inTag:                testTag,
+			ExpectedError:        e.ClientTagError,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			err = service.Update(testSuite.inUserID, testSuite.inTagID, newTag)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_TagDetach(t *testing.T) {
+
+	testTag := mother.TagMother()
+
+	newTag := testTag
+	newTag.Label = "new"
+
+	logging.Init()
+	logger := logging.GetLogger()
+
+	testSuites := []struct {
+		testName             string
+		prepareAccountAction string
+		prepareNoteAction    string
+		prepareTagAction     string
+		inUserID             int
+		inAssignedNoteID     int
+		inNoteID             int
+		inTagID              int
+		ExpectedError        error
+	}{
+		{
+			testName:             "TagAttachedToFittingNote",
+			inUserID:             1,
+			inNoteID:             1,
+			inAssignedNoteID:     1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "TagAttachedToNonFittingNote",
+			inUserID:             1,
+			inNoteID:             1,
+			inAssignedNoteID:     2,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT x2",
+			prepareTagAction:     "ASSIGN",
+			ExpectedError:        nil,
+		},
+		{
+			testName:             "NoteNotFound",
+			inUserID:             1,
+			inNoteID:             0,
+			inAssignedNoteID:     1,
+			inTagID:              1,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			ExpectedError:        e.ClientNoteError,
+		},
+		{
+			testName:             "TagNotFound",
+			inUserID:             1,
+			inNoteID:             1,
+			inAssignedNoteID:     1,
+			inTagID:              0,
+			prepareAccountAction: "INSERT",
+			prepareNoteAction:    "INSERT",
+			prepareTagAction:     "ASSIGN",
+			ExpectedError:        e.ClientTagError,
+		},
+	}
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			nr := repository.NewNoteRepositoryImpl(client, logger)
+			ar := repository.NewAccountRepositoryImpl(client, logger)
+			tr := repository.NewTagRepositoryImpl(client, logger)
+
+			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			if err != nil {
+				t.Fatalf("Can't do account pre-test action: %s", err)
+			}
+
+			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			err = prepareTagRepo(testSuite.prepareTagAction, testSuite.inUserID, testSuite.inAssignedNoteID, tr)
+			if err != nil {
+				t.Fatalf("Can't do pre-test note action: %s", err)
+			}
+
+			service := tag.NewService(tr, nr, logger)
+
+			err = service.Detach(testSuite.inUserID, testSuite.inTagID, testSuite.inNoteID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})

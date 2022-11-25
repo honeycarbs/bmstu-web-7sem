@@ -60,6 +60,12 @@ func (s *Service) GetAll(userID int) ([]model.Tag, error) {
 }
 
 func (s *Service) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
+	_, err := s.notesRepository.GetOne(userID, noteID)
+
+	if err != nil {
+		return []model.Tag{}, e.ClientNoteError
+	}
+
 	return s.tagsRepository.GetAllByNote(userID, noteID)
 }
 

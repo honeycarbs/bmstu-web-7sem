@@ -176,6 +176,7 @@ func TestService_GetAll(t *testing.T) {
 
 func TestService_GetAllByNote(t *testing.T) {
 	type tagRepoMockBehaviour func(r *mock.MockTagRepository, UserID, noteID int)
+	type noteRepoMockBehaviour func(r *mock.MockNoteRepository, UserID, noteID int)
 
 	testTag := mother.TagMother()
 
@@ -184,6 +185,7 @@ func TestService_GetAllByNote(t *testing.T) {
 		inUserID          int
 		inNoteID          int
 		tagsRepoBehaviour tagRepoMockBehaviour
+		noteRepoBehaviour noteRepoMockBehaviour
 		ExpectedError     error
 	}{
 		{
@@ -193,6 +195,9 @@ func TestService_GetAllByNote(t *testing.T) {
 			tagsRepoBehaviour: func(r *mock.MockTagRepository, UserID, noteID int) {
 				r.EXPECT().GetAllByNote(UserID, noteID).Return([]model.Tag{testTag}, nil)
 			},
+			noteRepoBehaviour: func(r *mock.MockNoteRepository, UserID, noteID int) {
+				r.EXPECT().GetOne(UserID, noteID).Return(model.Note{}, nil)
+			},
 			ExpectedError: nil,
 		},
 		{
@@ -200,6 +205,9 @@ func TestService_GetAllByNote(t *testing.T) {
 			inUserID: 0,
 			tagsRepoBehaviour: func(r *mock.MockTagRepository, UserID, noteID int) {
 				r.EXPECT().GetAllByNote(UserID, noteID).Return([]model.Tag{}, nil)
+			},
+			noteRepoBehaviour: func(r *mock.MockNoteRepository, UserID, noteID int) {
+				r.EXPECT().GetOne(UserID, noteID).Return(model.Note{}, nil)
 			},
 			ExpectedError: nil,
 		},
@@ -212,12 +220,20 @@ func TestService_GetAllByNote(t *testing.T) {
 			tagRepoMock := mock.NewMockTagRepository(c)
 			testSuite.tagsRepoBehaviour(tagRepoMock, 0, 0)
 
+			noteRepoMock := mock.NewMockNoteRepository(c)
+			testSuite.noteRepoBehaviour(noteRepoMock, 0, 0)
+
 			logging.Init()
 
 			tagRepo := &repository.TagRepositoryImpl{
 				TagRepository: tagRepoMock,
 			}
-			mockService := NewService(tagRepo, nil, logging.GetLogger())
+
+			noteRepo := &repository.NoteRepositoryImpl{
+				NoteRepository: noteRepoMock,
+			}
+
+			mockService := NewService(tagRepo, noteRepo, logging.GetLogger())
 
 			_, err := mockService.GetAllByNote(testSuite.inUserID, testSuite.inNoteID)
 
