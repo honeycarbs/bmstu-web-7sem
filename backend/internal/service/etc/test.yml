@@ -1,0 +1,17 @@
+---
+is_debug: true
+listen:
+  bind_ip: "localhost"
+  port: "8080"
+db:
+  host: "localhost"
+  port: "5432"
+  user: "test"
+  password: "pass"
+  dbname: "test"
+  ssl_mode: "disable"
+  migrations_path: "etc/migrations"
+jwt:
+  secret: "$ecr3t"
+swagger:
+  host: "localhost:8080"

@@ -4,20 +4,14 @@ import (
 	"log"
 	"neatly/internal/model"
 	"neatly/pkg/jwt"
-	"neatly/pkg/logging"
-	"os"
 	"time"
 )
 
 func TokenMother() string {
 	a := AccountMother()
-
-	logging.Init()
-	os.Setenv("CONF_FILE", "../../../etc/config/local.yml")
-
 	token, err := jwt.GenerateAccessToken(a.ID)
 	if err != nil {
-		log.Fatal("can't create sqlite token")
+		log.Fatal("can't create test token")
 	}
 
 	return token
@@ -31,7 +25,7 @@ func AccountMother() model.Account {
 		ID:           0,
 		Name:         "Test",
 		Username:     "TestTest",
-		Email:        "sqlite",
+		Email:        "test",
 		Password:     "testtest",
 		PasswordHash: testHash,
 	}

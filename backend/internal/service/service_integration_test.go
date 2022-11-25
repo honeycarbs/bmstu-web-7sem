@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
@@ -11,6 +12,7 @@ import (
 	"neatly/pkg/e"
 	"neatly/pkg/integration"
 	"neatly/pkg/logging"
+	"os"
 	"testing"
 )
 
@@ -69,7 +71,7 @@ func prepareTagRepo(action string, userID, noteID int, repo repository.TagReposi
 	}
 }
 
-func TestAccountCreate(t *testing.T) {
+func TestIntegration_AccountCreate(t *testing.T) {
 	testSuites := []struct {
 		testName      string
 		inAccount     model.Account
@@ -119,65 +121,67 @@ func TestAccountCreate(t *testing.T) {
 	}
 }
 
-//func TestGenerateJWT(t *testing.T) {
-//	testAccount := mother.AccountMother()
-//	testAccountInvalidPassword := testAccount
-//	testAccountInvalidPassword.Password = "kto prochital tot loh"
-//
-//	testSuites := []struct {
-//		testName         string
-//		inAccount        model.Account
-//		outAccount       model.Account
-//		prepareAction    string
-//		ExpectedError    error
-//		ExpectedTokenVal string
-//	}{
-//		{
-//			testName:         "AuthorizeSuccessful",
-//			inAccount:        testAccount,
-//			outAccount:       testAccount,
-//			prepareAction:    "INSERT",
-//			ExpectedError:    nil,
-//			ExpectedTokenVal: mother.TokenMother(),
-//		},
-//		{
-//			testName:         "PasswordDoesNotMatch",
-//			inAccount:        testAccountInvalidPassword,
-//			outAccount:       testAccount,
-//			prepareAction:    "INSERT",
-//			ExpectedError:    errors.New("password does not match"),
-//			ExpectedTokenVal: "",
-//		},
-//	}
-//
-//	logging.Init()
-//	logger := logging.GetLogger()
-//
-//	for _, testSuite := range testSuites {
-//		t.Run(testSuite.testName, func(t *testing.T) {
-//
-//			client, err := integration.GetTestResource()
-//			if err != nil {
-//				t.Fatal(err)
-//			}
-//
-//			repo := repository.NewAccountRepositoryImpl(client, logger)
-//			err = prepareAccountRepo(testSuite.prepareAction, repo)
-//			if err != nil {
-//				t.Fatalf("Can't do pre-test action: %s", err)
-//			}
-//
-//			service := account.NewService(repo, logger)
-//
-//			token, err := service.GenerateJWT(&testSuite.inAccount)
-//
-//			assert.Equal(t, testSuite.ExpectedError, err)
-//			assert.Equal(t, testSuite.ExpectedTokenVal, token)
-//		})
-//	}
-//}
+func TestIntegration_GenerateJWT(t *testing.T) {
+	logging.Init()
+	logger := logging.GetLogger()
 
-func TestAccountGetOne(t *testing.T) {
+	testAccount := mother.AccountMother()
+
+	testAccountInvalidPassword := testAccount
+	testAccountInvalidPassword.Password = "kto prochital tot loh"
+
+	testSuites := []struct {
+		testName      string
+		inAccount     model.Account
+		outAccount    model.Account
+		prepareAction string
+		ExpectedError error
+	}{
+		{
+			testName:      "AuthorizeSuccessful",
+			inAccount:     testAccount,
+			outAccount:    testAccount,
+			prepareAction: "INSERT",
+			ExpectedError: nil,
+		},
+		{
+			testName:      "PasswordDoesNotMatch",
+			inAccount:     testAccountInvalidPassword,
+			outAccount:    testAccount,
+			prepareAction: "INSERT",
+			ExpectedError: errors.New("password does not match"),
+		},
+	}
+
+	for _, testSuite := range testSuites {
+		t.Run(testSuite.testName, func(t *testing.T) {
+			err := os.Setenv("CONF_FILE", "etc/test.yml")
+			if err != nil {
+				t.Fatalf("Can't set config path: %s", err)
+			}
+
+			client, err := integration.GetTestResource()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			repo := repository.NewAccountRepositoryImpl(client, logger)
+			err = prepareAccountRepo(testSuite.prepareAction, repo)
+			if err != nil {
+				t.Fatalf("Can't do pre-test action: %s", err)
+			}
+
+			service := account.NewService(repo, logger)
+
+			token, err := service.GenerateJWT(&testSuite.inAccount)
+			logger.Info(token)
+
+			assert.Equal(t, testSuite.ExpectedError, err)
+		})
+	}
+}
+
+func TestIntegration_AccountGetOne(t *testing.T) {
 	testAccount := mother.AccountMother()
 
 	testSuites := []struct {
@@ -227,7 +231,7 @@ func TestAccountGetOne(t *testing.T) {
 	}
 }
 
-func TestNoteCreate(t *testing.T) {
+func TestIntegration_NoteCreate(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	logging.Init()
@@ -357,7 +361,7 @@ func TestNoteGetAll(t *testing.T) {
 	}
 }
 
-func TestNoteGetOne(t *testing.T) {
+func TestIntegration_NoteGetOne(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	logging.Init()
@@ -426,7 +430,7 @@ func TestNoteGetOne(t *testing.T) {
 	}
 }
 
-func TestNoteFindByTag(t *testing.T) {
+func TestIntegration_NoteFindByTag(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	logging.Init()
@@ -495,7 +499,7 @@ func TestNoteFindByTag(t *testing.T) {
 	}
 }
 
-func TestNoteUpdate(t *testing.T) {
+func TestIntegration_NoteUpdate(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	logging.Init()

@@ -13,8 +13,8 @@ func GetTestResource() (*dbclient.Client, error) {
 	}
 
 	resource, err := pool.Run("postgres", "alpine",
-		[]string{"POSTGRES_DB=sqlite",
-			"POSTGRES_USER=sqlite",
+		[]string{"POSTGRES_DB=test",
+			"POSTGRES_USER=test",
 			"POSTGRES_PASSWORD=pass"})
 
 	resource.Expire(30)

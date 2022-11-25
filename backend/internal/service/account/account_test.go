@@ -1,3 +1,6 @@
+//go:build unit
+// +build unit
+
 package account
 
 import (
@@ -11,6 +14,7 @@ import (
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
+	"os"
 	"testing"
 )
 
@@ -70,6 +74,11 @@ func TestService_GenerateJWT(t *testing.T) {
 	testAccount := mother.AccountMother()
 	testAccountInvalidPassword := testAccount
 	testAccountInvalidPassword.Password = "kto prochital tot loh"
+
+	err := os.Setenv("CONF_FILE", "../etc/test.yml")
+	if err != nil {
+		t.Fatalf("Can't set config path: %s", err)
+	}
 
 	testSuites := []struct {
 		testName                  string

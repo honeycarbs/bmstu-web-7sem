@@ -88,7 +88,7 @@ func TestClientClose(client *Client) error {
 }
 
 func NewIntegrationClinent(resource *dockertest.Resource) (*Client, error) {
-	dsn := "postgres://sqlite:pass@0.0.0.0:" + resource.GetPort("5432/tcp") + "/sqlite?sslmode=disable"
+	dsn := "postgres://test:pass@0.0.0.0:" + resource.GetPort("5432/tcp") + "/test?sslmode=disable"
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
@@ -100,7 +100,7 @@ func NewIntegrationClinent(resource *dockertest.Resource) (*Client, error) {
 		return nil, err
 	}
 
-	err = runUpMigration(db, "sqlite", "../../etc/migrations")
+	err = runUpMigration(db, "test", "../../etc/migrations")
 	if err != nil {
 		return nil, err
 	}
