@@ -64,7 +64,7 @@ func TestService_CreateAccount(t *testing.T) {
 
 			err := mockService.CreateAccount(&testSuite.inAccount)
 
-			assert.Equal(t, testSuite.ExpectedError, nil)
+			assert.Equal(t, testSuite.ExpectedError, err)
 		})
 	}
 }
