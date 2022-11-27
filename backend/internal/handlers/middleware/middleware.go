@@ -18,7 +18,7 @@ const (
 
 func CorsMiddleware(router *gin.Engine) {
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
+	config.AllowOrigins = []string{"http://localhost:5173/", "http://localhost:8084"}
 	router.Use(cors.New(config))
 }
 

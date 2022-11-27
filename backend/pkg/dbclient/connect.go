@@ -29,12 +29,12 @@ func NewClient(cfg session.DB) (*Client, error) {
 		return nil, err
 	}
 
-	err = runUpMigration(db, cfg.DBName, cfg.MigrationsPath)
+	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can't ping DB: %v", err)
 	}
 
-	err = db.Ping()
+	err = runUpMigration(db, cfg.DBName, cfg.MigrationsPath)
 	if err != nil {
 		return nil, err
 	}

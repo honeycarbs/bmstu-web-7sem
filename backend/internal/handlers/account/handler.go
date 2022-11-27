@@ -34,6 +34,7 @@ func NewHandler(logger logging.Logger, service service.AccountServiceImpl, mappe
 }
 
 func (h *Handler) Register(router *gin.Engine) {
+	// TODO: logout endpoint
 	groupName := fmt.Sprintf("%v/v%v%v", apiURLGroup, apiVersion, accountsURLGroup)
 
 	h.logger.Tracef("Register route: %v", groupName)
