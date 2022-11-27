@@ -9,6 +9,7 @@ import (
 	"neatly/pkg/logging"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -18,7 +19,17 @@ const (
 
 func CorsMiddleware(router *gin.Engine) {
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173/", "http://localhost:8084"}
+	config.AllowOrigins = []string{"http://localhost:5173", "http://localhost:8084"}
+	config.AllowHeaders = []string{"Content-Type"}
+	config.ExposeHeaders = []string{"Content-Length"}
+	config.AllowCredentials = true
+
+	config.AllowOriginFunc = func(origin string) bool {
+		return origin == "http://localhost:5173"
+	}
+
+	config.MaxAge = 12 * time.Hour
+
 	router.Use(cors.New(config))
 }
 
