@@ -166,7 +166,6 @@ func (h *Handler) GetAccount(ctx *gin.Context) {
 // @Failure default {object} e.ErrorResponse
 // @Router /api/v1/accounts/login [post]
 func (h *Handler) Login(ctx *gin.Context) {
-	//h.logger.Info("Got login request")
 	var loginDto dto.LoginAccountDTO
 
 	if err := ctx.BindJSON(&loginDto); err != nil {
