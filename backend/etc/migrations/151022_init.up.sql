@@ -27,8 +27,7 @@ CREATE TABLE users_notes (
 
 CREATE TABLE tags (
     id SERIAL NOT NULL UNIQUE,
-    label VARCHAR(255) NOT NULL,
-    color VARCHAR(6) NOT NULL
+    label VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE tags_notes (

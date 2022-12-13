@@ -47,6 +47,5 @@ func TagMother() model.Tag {
 	return model.Tag{
 		ID:    0,
 		Label: "",
-		Color: "",
 	}
 }

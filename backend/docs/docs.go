@@ -76,7 +76,7 @@ const docTemplate = `{
                 "tags": [
                     "account"
                 ],
-                "summary": "Register",
+                "summary": "RegisterAccount",
                 "operationId": "create-account",
                 "parameters": [
                     {
@@ -94,6 +94,12 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
                         }
                     },
                     "500": {
@@ -128,7 +134,7 @@ const docTemplate = `{
                 "tags": [
                     "account"
                 ],
-                "summary": "getAccount",
+                "summary": "GetAccount",
                 "operationId": "get-account",
                 "parameters": [
                     {
@@ -144,6 +150,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.GetAccountDTO"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
                         }
                     },
                     "500": {
@@ -315,6 +327,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.Note"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/e.ErrorResponse"
                         }
                     },
                     "500": {
@@ -888,14 +906,10 @@ const docTemplate = `{
         "dto.CreateTagDTO": {
             "type": "object",
             "required": [
-                "color",
-                "name"
+                "label"
             ],
             "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "name": {
+                "label": {
                     "type": "string"
                 }
             }
@@ -984,10 +998,7 @@ const docTemplate = `{
         "dto.UpdateTagDTO": {
             "type": "object",
             "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "name": {
+                "label": {
                     "type": "string"
                 }
             }
@@ -1040,11 +1051,7 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "shortBody": {
-                    "type": "string"
-                },
                 "tags": {
-                    "description": "[]tag.Tag",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Tag"
@@ -1055,17 +1062,13 @@ const docTemplate = `{
         "model.Tag": {
             "type": "object",
             "required": [
-                "color",
-                "name"
+                "label"
             ],
             "properties": {
-                "color": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "label": {
                     "type": "string"
                 }
             }

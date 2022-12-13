@@ -117,7 +117,7 @@ func TestService_Create(t *testing.T) {
 			}
 			mockService := NewService(tagRepo, noteRepo, logging.GetLogger())
 
-			err := mockService.Create(0, 0, &testSuite.inTag)
+			_, err := mockService.Create(0, 0, &testSuite.inTag)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
@@ -299,16 +299,13 @@ func TestService_Update(t *testing.T) {
 
 	testTagBeforeUpdate := mother.TagMother()
 	testTagBeforeUpdate.Label = "old name"
-	testTagBeforeUpdate.Color = "old color"
 
 	testTagNameUpdate := mother.TagMother()
 	testTagNameUpdate.Label = "new name"
 
 	testTagNameUpdateFull := testTagNameUpdate
-	testTagNameUpdateFull.Color = testTagBeforeUpdate.Color
 
 	testTagColorUpdate := mother.TagMother()
-	testTagColorUpdate.Color = "new color"
 
 	testTagColorUpdateFull := testTagColorUpdate
 	testTagColorUpdateFull.Label = testTagBeforeUpdate.Label

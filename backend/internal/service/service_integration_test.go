@@ -660,7 +660,7 @@ func TestIntegration_TagCreate(t *testing.T) {
 
 			service := tag.NewService(tr, nr, logger)
 
-			err = service.Create(testSuite.inUserID, testSuite.inNoteID, &testSuite.inTag)
+			_, err = service.Create(testSuite.inUserID, testSuite.inNoteID, &testSuite.inTag)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})

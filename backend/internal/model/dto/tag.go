@@ -5,13 +5,11 @@ import (
 )
 
 type CreateTagDTO struct {
-	Name  string `json:"name" binding:"required"`
-	Color string `json:"color" binding:"required"`
+	Label string `json:"label" binding:"required"`
 }
 
 type UpdateTagDTO struct {
-	Name  string `json:"name" db:"name"`
-	Color string `json:"color" db:"color"`
+	Label string `json:"label" db:"label"`
 }
 
 type GetAllTagsDTO struct {

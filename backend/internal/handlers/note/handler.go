@@ -69,6 +69,8 @@ func (h *Handler) createNote(ctx *gin.Context) {
 		return
 	}
 
+	//h.logger.Info(ctx.G)
+
 	var createNoteDTO dto.CreateNoteDTO
 	if err := ctx.BindJSON(&createNoteDTO); err != nil {
 		h.logger.Info(err)
@@ -112,7 +114,6 @@ func (h *Handler) getAllNotes(ctx *gin.Context) {
 	values := keys[tagSearchKey]
 	if values == nil {
 		ns, err = h.service.GetAll(userID)
-		h.logger.Info(err)
 		if err != nil {
 			e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
 			return

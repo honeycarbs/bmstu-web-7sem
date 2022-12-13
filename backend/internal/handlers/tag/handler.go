@@ -96,7 +96,7 @@ func (h *Handler) createTag(ctx *gin.Context) {
 	}
 
 	t = h.mapper.MapCreateTagDTO(createTagDTO)
-	err = h.service.Create(userID, noteID, &t)
+	modified, err := h.service.Create(userID, noteID, &t)
 
 	if err != nil {
 		if errors.Is(err, e.ClientTagError) || errors.Is(err, e.ClientNoteError) {
@@ -107,8 +107,14 @@ func (h *Handler) createTag(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, fmt.Sprintf(
-		"%s%s/v%v%v", apiURLGroup, apiVersion, tagsURLGroup, t.ID))
+	status := http.StatusOK
+
+	if modified {
+		status = http.StatusCreated
+	}
+
+	ctx.JSON(status, fmt.Sprintf(
+		"%s/%sv/%v/%v", apiURLGroup, apiVersion, tagsURLGroup, t.ID))
 }
 
 // @Summary Get all tags on one note

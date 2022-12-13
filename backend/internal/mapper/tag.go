@@ -17,16 +17,16 @@ func NewTagMapper(logger logging.Logger) *TagMapper {
 func (m *TagMapper) MapCreateTagDTO(dto dto.CreateTagDTO) model.Tag {
 	return model.Tag{
 		ID:    0,
-		Label: dto.Name,
-		Color: dto.Color,
+		Label: dto.Label,
+		//Color: dto.Color,
 	}
 }
 
 func (m *TagMapper) MapUpdateTagDTO(dto dto.UpdateTagDTO) model.Tag {
 	return model.Tag{
 		ID:    0,
-		Label: dto.Name,
-		Color: dto.Color,
+		Label: dto.Label,
+		//Color: dto.Color,
 	}
 }
 

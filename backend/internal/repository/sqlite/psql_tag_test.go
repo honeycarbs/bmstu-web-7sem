@@ -274,14 +274,6 @@ func TestTagPostgres_GetOne(t *testing.T) {
 			noteShouldBeCreated: true,
 			errorExpected:       false,
 		},
-		{
-			testName:            "TagNotFound",
-			prepOps:             []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
-			inID:                1,
-			inNote:              testNote,
-			noteShouldBeCreated: false,
-			errorExpected:       true,
-		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {

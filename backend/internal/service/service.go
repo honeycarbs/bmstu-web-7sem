@@ -45,7 +45,7 @@ func NewNoteServiceImpl(noteRepo *repository.NoteRepositoryImpl, tagRepo *reposi
 }
 
 type TagService interface {
-	Create(userID, noteID int, tag *model.Tag) error
+	Create(userID, noteID int, tag *model.Tag) (bool, error)
 	GetAll(userID int) ([]model.Tag, error)
 	GetAllByNote(userID, noteID int) ([]model.Tag, error)
 	GetOne(userID, tagID int) (model.Tag, error)

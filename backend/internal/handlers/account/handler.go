@@ -181,6 +181,8 @@ func (h *Handler) Login(ctx *gin.Context) {
 		e.NewErrorResponse(ctx, http.StatusUnauthorized, err)
 		return
 	}
+	ctx.SetCookie("token", token, 36000, "/", "localhost", false, true)
+
 	loginWithTokenDto := h.mapper.MapAccountWithTokenDTO(token, a)
 
 	ctx.JSON(http.StatusOK, loginWithTokenDto)

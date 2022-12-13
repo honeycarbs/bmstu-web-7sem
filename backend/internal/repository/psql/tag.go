@@ -25,11 +25,11 @@ func (r *TagPostgres) Create(userID, noteID int, t *model.Tag) error {
 		return err
 	}
 
-	createTagQuery := `INSERT INTO tags AS t (label, color) VALUES ($1, $2) RETURNING id`
+	createTagQuery := `INSERT INTO tags AS t (label) VALUES ($1) RETURNING id`
 
 	r.logger.Infof("Tag with id %v created", t.ID)
 
-	row := r.db.QueryRow(createTagQuery, t.Label, t.Color)
+	row := r.db.QueryRow(createTagQuery, t.Label)
 	err = row.Scan(&t.ID)
 
 	if err != nil {
@@ -67,7 +67,7 @@ func (r *TagPostgres) GetAll(userID int) ([]model.Tag, error) {
 	var tags []model.Tag
 	tags = make([]model.Tag, 0)
 
-	query := `SELECT tags_id AS id, label, color FROM
+	query := `SELECT tags_id AS id, label FROM
 			  tags t JOIN users_tags ut ON ut.tags_id = t.id  WHERE
 			  ut.users_id = $1`
 
@@ -82,7 +82,7 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
 	var tags []model.Tag
 	tags = make([]model.Tag, 0)
 
-	query := `SELECT t.id AS id, label, color FROM tags t
+	query := `SELECT t.id AS id, label FROM tags t
     		  JOIN users_tags ut ON ut.tags_id = t.id
     		  JOIN tags_notes nt on t.id = nt.tags_id
     		  WHERE users_id = $1 AND notes_id = $2`
@@ -97,12 +97,9 @@ func (r *TagPostgres) GetAllByNote(userID, noteID int) ([]model.Tag, error) {
 func (r *TagPostgres) GetOne(userID, tagID int) (model.Tag, error) {
 	var t model.Tag
 
-	query := `SELECT t.id AS id, label, color FROM tags t
-    		  JOIN users_tags ut ON ut.tags_id = t.id
-    		  JOIN tags_notes nt on t.id = nt.tags_id
-    		  WHERE users_id = $1 AND t.id = $2`
+	query := `SELECT t.id AS id, label FROM tags t where t.id = $1`
 
-	err := r.db.Get(&t, query, userID, tagID)
+	err := r.db.Get(&t, query, tagID)
 	if err != nil {
 		r.logger.Infof("Internal error: %v", err.Error())
 		if err == sql.ErrNoRows {
@@ -121,9 +118,10 @@ func (r *TagPostgres) Delete(userID, tagID int) error {
 }
 
 func (r *TagPostgres) Update(userID, tagID int, t model.Tag) error {
-	query := `UPDATE tags t SET label=$1, color=$2 FROM users_tags ut
-              WHERE t.id = ut.tags_id AND ut.tags_id = $3 AND ut.users_id = $4`
-	_, err := r.db.Exec(query, t.Label, t.Color, tagID, userID)
+	query := `UPDATE tags t SET label=$1 FROM users_tags ut
+              WHERE t.id = ut.tags_id AND ut.tags_id = $2 AND ut.users_id = $3`
+
+	_, err := r.db.Exec(query, t.Label, tagID, userID)
 
 	return err
 }

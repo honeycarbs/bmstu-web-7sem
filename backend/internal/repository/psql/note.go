@@ -106,8 +106,8 @@ func (r *NotePostgres) GetOne(userID, noteID int) (model.Note, error) {
 
 func (r *NotePostgres) Delete(userID, noteID int) error {
 	query := `DELETE FROM notes WHERE 
-              notes.id = $2`
-	_, err := r.db.Exec(query, userID, noteID)
+              notes.id = $1`
+	_, err := r.db.Exec(query, userID)
 
 	return err
 }

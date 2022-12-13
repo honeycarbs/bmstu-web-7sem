@@ -64,7 +64,7 @@ func (s *Service) Delete(userID, noteID int) error {
 	if err != nil {
 		return e.ClientNoteError
 	}
-	return s.notesRepository.Delete(userID, noteID)
+	return s.notesRepository.Delete(noteID, userID)
 }
 
 func (s *Service) Update(userID int, n model.Note, needBodyUpdate bool) error {

@@ -14,7 +14,7 @@ type Note struct {
 	ID        int       `json:"id" db:"id"`
 	Header    string    `json:"header" db:"header"`
 	Body      string    `json:"body" db:"body"`
-	ShortBody string    `json:"shortBody" db:"short_body"`
+	ShortBody string    `json:"-" db:"short_body"`
 	Tags      []Tag     `json:"tags" db:"tags"`
 	Color     string    `json:"color" db:"color"`
 	Edited    time.Time `json:"edited"`

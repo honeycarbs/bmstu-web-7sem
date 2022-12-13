@@ -18,41 +18,44 @@ func NewService(tagsRepository *repository.TagRepositoryImpl, notesRepository *r
 	return &Service{tagsRepository: tagsRepository, notesRepository: notesRepository, logger: logger}
 }
 
-func (s *Service) Create(userID, noteID int, t *model.Tag) error {
+func (s *Service) Create(userID, noteID int, t *model.Tag) (bool, error) {
 	_, err := s.notesRepository.GetOne(userID, noteID)
 	if err != nil {
-		return e.ClientNoteError
+		return false, e.ClientNoteError
 	}
 
 	tags, err := s.tagsRepository.GetAll(userID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
+	modified := false
 	unique, tuID := s.checkIfUnique(tags, *t)
 	if !unique {
 		s.logger.Infof("Tag with ID %v is not unique", tuID)
 		assigned, err := s.checkIfAssigned(tuID, noteID, userID)
 		if err != nil {
-			return err
+			return modified, err
 		}
 		if !assigned {
+			modified = true
 			s.logger.Infof("Tag with ID %v is not assigned to note %v", tuID, noteID)
 			t.ID = tuID
 			err := s.tagsRepository.Assign(tuID, noteID, userID)
-			return err
+			return modified, err
 		}
 		t.ID = tuID
-		return nil
+		return modified, nil
 	}
 
 	s.logger.Infof("Tag with ID %v is inuque and will be assigned to note with ID %v", t.ID, noteID)
+	modified = true
 	err = s.tagsRepository.Create(userID, noteID, t)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = s.tagsRepository.Assign(t.ID, noteID, userID)
-	return err
+	return modified, err
 }
 
 func (s *Service) GetAll(userID int) ([]model.Tag, error) {
@@ -83,9 +86,6 @@ func (s *Service) Update(userID, tagID int, t model.Tag) error {
 		return e.ClientTagError
 	}
 
-	if t.Color == "" {
-		t.Color = tp.Color
-	}
 	if t.Label == "" {
 		t.Label = tp.Label
 	}

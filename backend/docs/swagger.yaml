@@ -14,13 +14,10 @@ definitions:
     type: object
   dto.CreateTagDTO:
     properties:
-      color:
-        type: string
-      name:
+      label:
         type: string
     required:
-    - color
-    - name
+    - label
     type: object
   dto.GetAccountDTO:
     properties:
@@ -76,9 +73,7 @@ definitions:
     type: object
   dto.UpdateTagDTO:
     properties:
-      color:
-        type: string
-      name:
+      label:
         type: string
     type: object
   dto.WithTokenDTO:
@@ -113,25 +108,19 @@ definitions:
         type: string
       id:
         type: integer
-      shortBody:
-        type: string
       tags:
-        description: '[]tag.Tag'
         items:
           $ref: '#/definitions/model.Tag'
         type: array
     type: object
   model.Tag:
     properties:
-      color:
-        type: string
       id:
         type: integer
-      name:
+      label:
         type: string
     required:
-    - color
-    - name
+    - label
     type: object
 info:
   contact: {}
@@ -159,6 +148,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.GetAccountDTO'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -169,7 +162,7 @@ paths:
             $ref: '#/definitions/e.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: getAccount
+      summary: GetAccount
       tags:
       - account
   /api/v1/accounts/login:
@@ -223,6 +216,10 @@ paths:
           description: Created
           schema:
             type: string
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -231,7 +228,7 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/e.ErrorResponse'
-      summary: Register
+      summary: RegisterAccount
       tags:
       - account
   /api/v1/notes:
@@ -359,6 +356,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Note'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/e.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
