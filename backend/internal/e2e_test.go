@@ -61,19 +61,12 @@ func TestE2E_AccountCreateAndAuthorize(t *testing.T) {
 		assert.Equal(t, w.Code, 201)
 		assert.Equal(t, w.Body.String(), fmt.Sprintf(`"/api/v1/accounts/%v"`, expectedUserID))
 
-		//a, err := serv.Autho(expectedUserID)
-		//if err != nil {
-		//	t.Fatalf("[service] Can't get test account: %s", err)
-		//}
-
 		canAuth := repo.AuthorizeAccount(&testAccount)
 		if canAuth != nil {
 			t.Fatalf("[repository] Can't authorize test account: %s", err)
 		}
 		err = testAccount.CheckPassword(testAccount.Password)
 		assert.Equal(t, err, nil)
-
-		//assert.Equal(t, a.ID, expectedUserID)
 
 		err := client.TestClientClose("../etc/migrations")
 		if err != nil {

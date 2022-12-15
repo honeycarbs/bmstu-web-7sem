@@ -343,7 +343,7 @@ func TestService_FindByTags(t *testing.T) {
 	testNote := mother.NoteMother()
 
 	testTag := mother.TagMother()
-	testTag.Label = "sqlite"
+	testTag.Label = "psql_test"
 
 	testNoteWithoutTags := testNote
 	testNoteWithoutTags.Tags = []model.Tag{}
@@ -435,7 +435,7 @@ func TestService_FindByTags(t *testing.T) {
 			}
 			mockService := NewService(noteRepo, tagRepo, logging.GetLogger())
 
-			tags := []string{"sqlite"}
+			tags := []string{"psql_test"}
 			got, err := mockService.FindByTags(0, tags)
 
 			assert.Equal(t, testSuite.ExpectedError, err)

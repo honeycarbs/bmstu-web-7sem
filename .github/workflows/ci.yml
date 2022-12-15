@@ -36,7 +36,8 @@ jobs:
           go test -v account/*
           go test -v note/*
           go test -v tag/*
-          cd ..
+          cd ../repository/psql_test
+          go test -v psql* 
           docker-compose down
 
       - name: Integration tests

@@ -1,7 +1,7 @@
 //go:build unit
 // +build unit
 
-package sqlite_test
+package psql_test
 
 import (
 	"fmt"
@@ -65,6 +65,10 @@ func TestAccountPostgres_CreateAccount(t *testing.T) {
 			}
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestAccountPostgres_AuthorizeAccount(t *testing.T) {
@@ -117,5 +121,9 @@ func TestAccountPostgres_AuthorizeAccount(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
