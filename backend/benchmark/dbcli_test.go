@@ -46,7 +46,7 @@ func benchmarkSubstrSize() {
 	//	log.Fatalln(err)
 	//}
 	//defer func(cli *dbclient.Client) {
-	//	err := cli.BenchClientClose(cli)
+	//	err := cli.TestClientClose(cli)
 	//	if err != nil {
 	//		log.Fatalln(err)
 	//	}

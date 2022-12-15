@@ -10,7 +10,7 @@ var (
 )
 
 func Setup(migrationsPath string) (*dbclient.Client, error) {
-	client, err := dbclient.NewBenchClient(migrationsPath)
+	client, err := dbclient.NewTestClient(migrationsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func Setup(migrationsPath string) (*dbclient.Client, error) {
 }
 
 func Cleanup(client *dbclient.Client, migrationsPath string) error {
-	err := client.BenchClientClose(migrationsPath)
+	err := client.TestClientClose(migrationsPath)
 	if err != nil {
 		return err
 	}

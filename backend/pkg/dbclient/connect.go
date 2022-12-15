@@ -5,7 +5,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/ory/dockertest"
 	"neatly/internal/session"
 	"neatly/pkg/logging"
 )
@@ -44,7 +43,7 @@ func NewClient(cfg session.DB) (*Client, error) {
 	}, nil
 }
 
-func NewBenchClient(migrationsPath string) (*Client, error) {
+func NewTestClient(migrationsPath string) (*Client, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		"localhost",
@@ -74,7 +73,7 @@ func NewBenchClient(migrationsPath string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) BenchClientClose(migrationsPath string) error {
+func (c *Client) TestClientClose(migrationsPath string) error {
 	err := RunDownMigrations(c.DB, "testdb", migrationsPath)
 	if err != nil {
 		return err
@@ -98,57 +97,4 @@ func (c *Client) Close(cfg session.DB) error {
 		return err
 	}
 	return nil
-}
-
-func NewTestClient() (*Client, error) {
-	logging.Init()
-	db, err := sqlx.Open("sqlite3", "file:db/sqlite.db")
-	if err != nil {
-		return nil, err
-	}
-
-	err = runTestUpMigration(db)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		DB: db,
-	}, nil
-}
-
-func TestClientClose(client *Client) error {
-	err := RunTestDownMigration(client.DB)
-	if err != nil {
-		return err
-	}
-
-	err = client.DB.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func NewIntegrationClinent(resource *dockertest.Resource, migrationPath string) (*Client, error) {
-	dsn := "postgres://test:pass@0.0.0.0:" + resource.GetPort("5432/tcp") + "/test?sslmode=disable"
-
-	db, err := sqlx.Connect("postgres", dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	err = runUpMigration(db, "test", migrationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		DB: db,
-	}, nil
 }

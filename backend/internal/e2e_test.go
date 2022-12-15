@@ -33,7 +33,7 @@ func TestE2E_AccountCreateAndAuthorize(t *testing.T) {
 	logging.Init()
 	logger := logging.GetLogger()
 
-	client, err := dbclient.NewBenchClient("../etc/migrations")
+	client, err := dbclient.NewTestClient("../etc/migrations")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestE2E_AccountCreateAndAuthorize(t *testing.T) {
 
 		//assert.Equal(t, a.ID, expectedUserID)
 
-		err := client.BenchClientClose("../etc/migrations")
+		err := client.TestClientClose("../etc/migrations")
 		if err != nil {
 			t.Fatalf("[cleanup] Can't close DB: %v", err)
 		}
