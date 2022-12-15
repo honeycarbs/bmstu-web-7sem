@@ -14,8 +14,8 @@ import (
 	"neatly/internal/model"
 	"neatly/internal/repository"
 	"neatly/internal/service"
-	"neatly/pkg/integration"
 	"neatly/pkg/logging"
+	"neatly/pkg/testdocker"
 	"net/http/httptest"
 	"testing"
 )
@@ -35,7 +35,7 @@ func TestE2E_AccountCreateAndAuthorize(t *testing.T) {
 	logging.Init()
 	logger := logging.GetLogger()
 
-	client, err := integration.GetTestResource("../etc/migrations")
+	client, err := testdocker.GetTestResource("../etc/migrations")
 	if err != nil {
 		t.Fatal(err)
 	}

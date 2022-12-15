@@ -117,62 +117,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/accounts/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "account"
-                ],
-                "summary": "GetAccount",
-                "operationId": "get-account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.GetAccountDTO"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    },
-                    "default": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/e.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/notes": {
             "get": {
                 "security": [
@@ -910,20 +854,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "label": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GetAccountDTO": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }

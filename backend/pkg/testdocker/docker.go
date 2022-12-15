@@ -1,4 +1,4 @@
-package integration
+package testdocker
 
 import (
 	"fmt"
@@ -6,10 +6,10 @@ import (
 	"neatly/pkg/dbclient"
 )
 
-func GetTestResource(migrationPath string) (*dbclient.Client, error) {
+func GetTestResource(migrationPath string) (*dbclient.Client, *dockertest.Resource, *dockertest.Pool, error) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
-		return nil, fmt.Errorf("could not connect to docker pool: %s", err)
+		return nil, nil, nil, fmt.Errorf("could not connect to docker pool: %s", err)
 	}
 
 	resource, err := pool.Run("postgres", "alpine",
@@ -17,10 +17,10 @@ func GetTestResource(migrationPath string) (*dbclient.Client, error) {
 			"POSTGRES_USER=test",
 			"POSTGRES_PASSWORD=pass"})
 
-	resource.Expire(30)
+	//resource.Expire(100)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not start resource: %s", err)
+		return nil, nil, nil, fmt.Errorf("could not start resource: %s", err)
 	}
 
 	var cli *dbclient.Client
@@ -32,8 +32,8 @@ func GetTestResource(migrationPath string) (*dbclient.Client, error) {
 		}
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("could not connect to docker resource: %s", err)
+		return nil, nil, nil, fmt.Errorf("could not connect to docker resource: %s", err)
 	}
 
-	return cli, nil
+	return cli, resource, pool, nil
 }

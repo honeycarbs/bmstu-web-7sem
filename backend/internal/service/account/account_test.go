@@ -4,7 +4,6 @@
 package account
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/go-playground/assert/v2"
 	"github.com/golang/mock/gomock"
@@ -128,57 +127,6 @@ func TestService_GenerateJWT(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 			assert.Equal(t, testSuite.ExpectedTokenVal, token)
-		})
-	}
-}
-func TestService_GetOne(t *testing.T) {
-	type RepoMockBehaviour func(r *mock.MockAccountRepository, id int)
-	testAccount := mother.AccountMother()
-
-	testSuites := []struct {
-		testName            string
-		inID                int
-		GetAccountBehaviour RepoMockBehaviour
-		outAccount          model.Account
-		ExpectedError       error
-	}{
-		{
-			testName: "AccountFound",
-			inID:     0,
-			GetAccountBehaviour: func(r *mock.MockAccountRepository, id int) {
-				r.EXPECT().GetOne(id).Return(testAccount, nil)
-			},
-			outAccount:    testAccount,
-			ExpectedError: nil,
-		},
-		{
-			testName: "AccountNotFound",
-			inID:     0,
-			GetAccountBehaviour: func(r *mock.MockAccountRepository, id int) {
-				r.EXPECT().GetOne(id).Return(testAccount, sql.ErrNoRows)
-			},
-			outAccount:    testAccount,
-			ExpectedError: sql.ErrNoRows,
-		},
-	}
-
-	for _, testSuite := range testSuites {
-		t.Run(testSuite.testName, func(t *testing.T) {
-			c := gomock.NewController(t)
-			defer c.Finish()
-
-			repoMock := mock.NewMockAccountRepository(c)
-			testSuite.GetAccountBehaviour(repoMock, testSuite.inID)
-
-			logging.Init()
-			repo := &repository.AccountRepositoryImpl{
-				AccountRepository: repoMock,
-			}
-			mockService := NewService(repo, logging.GetLogger())
-			got, err := mockService.GetOne(testSuite.inID)
-
-			assert.Equal(t, testSuite.ExpectedError, err)
-			assert.Equal(t, testSuite.outAccount, got)
 		})
 	}
 }

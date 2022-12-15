@@ -5,7 +5,6 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/jmoiron/sqlx"
-	"neatly/pkg/logging"
 )
 
 func runUpMigration(db *sqlx.DB, dbname string, migrationsPath string) error {
@@ -27,7 +26,6 @@ func runUpMigration(db *sqlx.DB, dbname string, migrationsPath string) error {
 }
 
 func RunDownMigrations(db *sqlx.DB, dbname string, migrationsPath string) error {
-	logging.GetLogger().Info("Running DOWN migration...")
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
 	if err != nil {
 		return err

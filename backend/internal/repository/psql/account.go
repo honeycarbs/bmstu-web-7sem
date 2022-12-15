@@ -4,6 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"neatly/internal/model"
 	"neatly/pkg/dbclient"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
 )
 
@@ -38,21 +39,8 @@ func (r *AccountPostgres) AuthorizeAccount(a *model.Account) error {
 
 	err := r.db.Get(a, query, &a.Username)
 	if err != nil {
-		return err
+		return e.ClientAuthorizeError
 	}
 
 	return nil
-}
-
-func (r *AccountPostgres) GetOne(userID int) (model.Account, error) {
-	query := `SELECT id, name, username, email FROM
-              users WHERE id=$1`
-
-	var a model.Account
-
-	err := r.db.Get(&a, query, userID)
-	if err != nil {
-		return a, err
-	}
-	return a, nil
 }

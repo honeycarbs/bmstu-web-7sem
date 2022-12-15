@@ -9,8 +9,9 @@ import (
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
 	"neatly/internal/repository/psql"
-	"neatly/pkg/dbclient"
+	"neatly/pkg/e"
 	"neatly/pkg/logging"
+	"neatly/pkg/testutils"
 	"testing"
 )
 
@@ -23,23 +24,22 @@ func TestNotePostgres_Create(t *testing.T) {
 		prepOps       []string
 		inNote        model.Note
 		inID          int
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "NoteCreatedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inNote:        testNote,
 			inID:          1,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -51,14 +51,17 @@ func TestNotePostgres_Create(t *testing.T) {
 				}
 			}
 			err = repo.Create(testSuite.inID, &testSuite.inNote)
-			logger.Info(err)
+			assert.Equal(t, testSuite.expectedError, err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -69,22 +72,21 @@ func TestNotePostgres_GetAll(t *testing.T) {
 		testName      string
 		prepOps       []string
 		inID          int
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "NotesCollectedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -96,14 +98,17 @@ func TestNotePostgres_GetAll(t *testing.T) {
 				}
 			}
 			_, err = repo.GetAll(testSuite.inID)
-			logger.Info(err)
+			assert.Equal(t, testSuite.expectedError, err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -116,30 +121,29 @@ func TestNotePostgres_GetOne(t *testing.T) {
 		prepOps             []string
 		inID                int
 		noteShouldBeCreated bool
-		errorExpected       bool
+		expectedError       error
 	}{
 		{
 			testName:            "NoteCollectedSuccessfully",
-			prepOps:             []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:             []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:                1,
 			noteShouldBeCreated: true,
-			errorExpected:       false,
+			expectedError:       nil,
 		},
 		{
 			testName:            "NotCanNotBeFound",
-			prepOps:             []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:             []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:                1,
 			noteShouldBeCreated: false,
-			errorExpected:       true,
+			expectedError:       e.ClientNoteError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -154,14 +158,18 @@ func TestNotePostgres_GetOne(t *testing.T) {
 				err = repo.Create(1, &testNote)
 			}
 			_, err = repo.GetOne(testSuite.inID, testNote.ID)
-			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -173,22 +181,21 @@ func TestNotePostgres_Delete(t *testing.T) {
 		testName      string
 		prepOps       []string
 		inID          int
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "NoteDeletedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -202,14 +209,17 @@ func TestNotePostgres_Delete(t *testing.T) {
 			err = repo.Create(1, &testNote)
 
 			err = repo.Delete(testSuite.inID, testNote.ID)
-			logger.Info(err)
+			assert.Equal(t, testSuite.expectedError, err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -223,24 +233,22 @@ func TestNotePostgres_Update(t *testing.T) {
 		inID                int
 		inNote              model.Note
 		noteShouldBeCreated bool
-		errorExpected       bool
+		expectedError       error
 	}{
 		{
-			testName:            "NoteUpdatedSuccessfully",
-			prepOps:             []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
-			inID:                1,
-			inNote:              testNote,
-			noteShouldBeCreated: true,
-			errorExpected:       false,
+			testName:      "NoteUpdatedSuccessfully",
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			inID:          1,
+			inNote:        testNote,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -255,13 +263,16 @@ func TestNotePostgres_Update(t *testing.T) {
 				err = repo.Create(1, &testNote)
 			}
 			err = repo.Update(testSuite.inID, testSuite.inNote)
-			logger.Info(err)
+			assert.Equal(t, testSuite.expectedError, err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

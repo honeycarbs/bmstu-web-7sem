@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"neatly/internal/handlers/middleware"
 	"neatly/internal/mapper"
 	"neatly/internal/model"
 	"neatly/internal/model/dto"
@@ -12,7 +11,6 @@ import (
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
 	"net/http"
-	"strconv"
 )
 
 const (
@@ -34,7 +32,6 @@ func NewHandler(logger logging.Logger, service service.AccountServiceImpl, mappe
 }
 
 func (h *Handler) Register(router *gin.Engine) {
-	// TODO: logout endpoint
 	groupName := fmt.Sprintf("%v/v%v%v", apiURLGroup, apiVersion, accountsURLGroup)
 
 	h.logger.Tracef("Register route: %v", groupName)
@@ -43,11 +40,6 @@ func (h *Handler) Register(router *gin.Engine) {
 	{
 		auth.POST(registerURL, h.RegisterAccount)
 		auth.POST(loginURL, h.Login)
-	}
-
-	accounts := router.Group(groupName, middleware.Authenticate)
-	{
-		accounts.GET("/:id", h.GetAccount)
 	}
 }
 
@@ -106,51 +98,6 @@ func (h *Handler) RegisterAccount(ctx *gin.Context) {
 		accountsURLGroup,
 		a.ID,
 	))
-}
-
-// GetAccount
-// @Summary GetAccount
-// @Security ApiKeyAuth
-// @Tags account
-// @Description get account
-// @ID get-account
-// @Accept  json
-// @Produce  json
-// @Param id   path  string  true  "id"
-// @Success 200 {object} dto.GetAccountDTO
-// @Failure 500 {object} e.ErrorResponse
-// @Failure 403 {object} e.ErrorResponse
-// @Failure default {object} e.ErrorResponse
-// @Router /api/v1/accounts/{id} [get]
-func (h *Handler) GetAccount(ctx *gin.Context) {
-	fromTokenID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
-		return
-	}
-	h.logger.Info(fromTokenID)
-
-	fromUrlID, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		h.logger.Info("error while getting id from request")
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
-		return
-	}
-	h.logger.Info(fromUrlID)
-
-	if fromUrlID != fromTokenID {
-		e.NewErrorResponse(ctx, http.StatusForbidden, errors.New("permission denied"))
-		return
-	}
-
-	a, err := h.service.GetOne(fromUrlID)
-	if err != nil {
-		e.NewErrorResponse(ctx, http.StatusInternalServerError, err)
-		return
-	}
-
-	out := h.mapper.MapAccountDTO(a)
-	ctx.JSON(http.StatusOK, out)
 }
 
 // Login

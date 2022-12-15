@@ -12,7 +12,6 @@ import (
 type AccountService interface {
 	CreateAccount(a *model.Account) error
 	GenerateJWT(a *model.Account) (string, error)
-	GetOne(userID int) (model.Account, error)
 }
 
 type AccountServiceImpl struct {

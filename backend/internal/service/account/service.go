@@ -38,8 +38,3 @@ func (s *Service) GenerateJWT(a *model.Account) (string, error) {
 
 	return token, nil
 }
-
-func (s *Service) GetOne(userID int) (model.Account, error) {
-	a, err := s.repository.GetOne(userID)
-	return a, err
-}

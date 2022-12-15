@@ -12,7 +12,6 @@ import (
 type AccountRepository interface {
 	CreateAccount(a *model.Account) error
 	AuthorizeAccount(a *model.Account) error
-	GetOne(userID int) (model.Account, error)
 }
 
 type AccountRepositoryImpl struct {

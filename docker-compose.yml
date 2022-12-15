@@ -1,30 +1,40 @@
 version: "3.7"
 
 services:
-   neatly-postgres:
-       image: postgres:alpine
-       ports:
-         - "5432:5432"
-       environment:
-         - POSTGRES_USER=neatly
-         - POSTGRES_PASSWORD=neatly
-         - PGDATA=/pgdata
-         - POSTGRES_DB=neatly
+  testdb:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=testdb
+      - POSTGRES_PASSWORD=testdb
+      - PGDATA=/pgdata
+      - POSTGRES_DB=testdb
 
-   backend1:
-     build:
-       context: ./backend
-     env_file:
-       - backend.env
-     command: ./wait-for-postgres.sh neatly-postgres ./app
-     container_name: backend1
-     restart: on-failure
+  neatly-postgres:
+     image: postgres:alpine
      ports:
-       - "8081:8080"
-     depends_on:
-       - neatly-postgres
+       - "5432:5432"
+     environment:
+       - POSTGRES_USER=neatly
+       - POSTGRES_PASSWORD=neatly
+       - PGDATA=/pgdata
+       - POSTGRES_DB=neatly
 
-   backend2:
+  backend1:
+   build:
+     context: ./backend
+   env_file:
+     - backend.env
+   command: ./wait-for-postgres.sh neatly-postgres ./app
+   container_name: backend1
+   restart: on-failure
+   ports:
+     - "8081:8080"
+   depends_on:
+     - neatly-postgres
+
+  backend2:
     build:
       context: ./backend
     command: ./wait-for-postgres.sh neatly-postgres ./app
@@ -36,8 +46,8 @@ services:
       - "8082:8080"
     depends_on:
       - neatly-postgres
- 
-   backend3:
+
+  backend3:
     build:
       context: ./backend
     env_file:
@@ -50,7 +60,7 @@ services:
     depends_on:
       - neatly-postgres
 
-   backend_mirror:
+  backend_mirror:
     build:
       context: ./backend
     env_file:
@@ -62,8 +72,8 @@ services:
       - "8084:8080"
     depends_on:
       - neatly-postgres
- 
-   nginx:
+
+  nginx:
     image: 'byjg/nginx-extras'
     ports:
       - "8080:8080"
@@ -79,9 +89,9 @@ services:
       - "backend3:backend3"
       - "pgadmin:pgadmin"
       - "backend_mirror:backend_mirror"
- 
- 
-   pgadmin:
+
+
+  pgadmin:
     image: 'dpage/pgadmin4'
     environment:
       - PGADMIN_DEFAULT_EMAIL=user@domain.com
@@ -91,14 +101,14 @@ services:
       - "8090:80"
 
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: neatly-frontend
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
+#  frontend:
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
+#    container_name: neatly-frontend
+#    command: npm run dev
+#    volumes:
+#      - ./frontend:/app
+#      - /app/node_modules
+#    ports:
+#      - "3000:3000"

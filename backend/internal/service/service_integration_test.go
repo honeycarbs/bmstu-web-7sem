@@ -14,8 +14,8 @@ import (
 	"neatly/internal/service/note"
 	"neatly/internal/service/tag"
 	"neatly/pkg/e"
-	"neatly/pkg/integration"
 	"neatly/pkg/logging"
+	"neatly/pkg/testdocker"
 	"os"
 	"testing"
 )
@@ -114,7 +114,7 @@ func TestIntegration_AccountCreate(t *testing.T) {
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
 
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -173,7 +173,7 @@ func TestIntegration_GenerateJWT(t *testing.T) {
 				t.Fatalf("Can't set config path: %s", err)
 			}
 
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -224,7 +224,7 @@ func TestIntegration_AccountGetOne(t *testing.T) {
 
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -271,7 +271,7 @@ func TestIntegration_NoteCreate(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -341,7 +341,7 @@ func TestNoteGetAll(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -410,7 +410,7 @@ func TestIntegration_NoteGetOne(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -479,7 +479,7 @@ func TestIntegration_NoteFindByTag(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -548,7 +548,7 @@ func TestIntegration_NoteUpdate(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -634,7 +634,7 @@ func TestIntegration_TagCreate(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -717,7 +717,7 @@ func TestIntegration_TagGetAll(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -800,7 +800,7 @@ func TestIntegration_TagGetAllByNote(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -876,7 +876,7 @@ func TestIntegration_TagGetOne(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -955,7 +955,7 @@ func TestIntegration_TagUpdate(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1056,7 +1056,7 @@ func TestIntegration_TagDetach(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := integration.GetTestResource("../../etc/migrations")
+			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}

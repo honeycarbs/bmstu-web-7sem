@@ -9,8 +9,8 @@ import (
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
 	"neatly/internal/repository/psql"
-	"neatly/pkg/dbclient"
 	"neatly/pkg/logging"
+	"neatly/pkg/testutils"
 	"testing"
 )
 
@@ -25,23 +25,22 @@ func TestTagPostgres_Create(t *testing.T) {
 		inID          int
 		inNote        model.Note
 		inTag         model.Tag
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "TagCreatedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
 			inNote:        testNote,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -60,15 +59,20 @@ func TestTagPostgres_Create(t *testing.T) {
 			}
 
 			err = repo.Create(1, testNote.ID, &testTag)
-			//err = repo.Update(testSuite.inID, testSuite.inNote)
 			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
+	}
+
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -83,23 +87,22 @@ func TestTagPostgres_Assign(t *testing.T) {
 		inID          int
 		inNote        model.Note
 		inTag         model.Tag
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "TagAssignedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
 			inNote:        testNote,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -123,10 +126,11 @@ func TestTagPostgres_Assign(t *testing.T) {
 
 			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}
@@ -143,23 +147,22 @@ func TestTagPostgres_GetAll(t *testing.T) {
 		inID          int
 		inNote        model.Note
 		inTag         model.Tag
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "TagsCollectedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
 			inNote:        testNote,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -183,10 +186,11 @@ func TestTagPostgres_GetAll(t *testing.T) {
 
 			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}
@@ -203,23 +207,22 @@ func TestTagPostgres_GetAllByNote(t *testing.T) {
 		inID          int
 		inNote        model.Note
 		inTag         model.Tag
-		errorExpected bool
+		expectedError error
 	}{
 		{
 			testName:      "TagsCollectedSuccessfully",
-			prepOps:       []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:       []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:          1,
 			inNote:        testNote,
-			errorExpected: false,
+			expectedError: nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -243,10 +246,11 @@ func TestTagPostgres_GetAllByNote(t *testing.T) {
 
 			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}
@@ -264,24 +268,23 @@ func TestTagPostgres_GetOne(t *testing.T) {
 		inNote              model.Note
 		inTag               model.Tag
 		noteShouldBeCreated bool
-		errorExpected       bool
+		expectedError       error
 	}{
 		{
 			testName:            "TagCollectedSuccessfully",
-			prepOps:             []string{fmt.Sprintf(newAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
+			prepOps:             []string{fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)},
 			inID:                1,
 			inNote:              testNote,
 			noteShouldBeCreated: true,
-			errorExpected:       false,
+			expectedError:       nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, err := dbclient.NewTestClient()
+			client, err := testutils.Setup("../../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer dbclient.TestClientClose(client)
 
 			logging.Init()
 			logger := logging.GetLogger()
@@ -310,10 +313,11 @@ func TestTagPostgres_GetOne(t *testing.T) {
 
 			logger.Info(err)
 
-			if testSuite.errorExpected {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, nil, err)
+			assert.Equal(t, testSuite.expectedError, err)
+
+			err = testutils.Cleanup(client, "../../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}
