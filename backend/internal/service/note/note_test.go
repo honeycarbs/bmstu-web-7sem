@@ -278,6 +278,10 @@ func TestService_GetOne(t *testing.T) {
 			}
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestService_Delete(t *testing.T) {
@@ -325,6 +329,10 @@ func TestService_Delete(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -436,6 +444,10 @@ func TestService_FindByTags(t *testing.T) {
 			}
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestService_Update(t *testing.T) {
@@ -499,5 +511,9 @@ func TestService_Update(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

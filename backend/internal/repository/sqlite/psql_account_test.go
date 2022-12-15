@@ -50,7 +50,6 @@ func TestAccountPostgres_CreateAccount(t *testing.T) {
 			for _, op := range testSuite.prepOps {
 				_, err = client.DB.Exec(op)
 				if err != nil {
-					logger.Info("Account creating")
 					t.Fatalf("sql.Exec: Error: %s\n", err)
 				}
 			}

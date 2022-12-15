@@ -12,6 +12,7 @@ import (
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
+	"neatly/pkg/testutils"
 
 	"testing"
 )
@@ -122,6 +123,10 @@ func TestService_Create(t *testing.T) {
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestService_GetAll(t *testing.T) {
@@ -171,6 +176,10 @@ func TestService_GetAll(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -240,6 +249,10 @@ func TestService_GetAllByNote(t *testing.T) {
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestService_GetOne(t *testing.T) {
@@ -291,6 +304,10 @@ func TestService_GetOne(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -369,6 +386,10 @@ func TestService_Update(t *testing.T) {
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
 	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestService_Delete(t *testing.T) {
@@ -410,6 +431,10 @@ func TestService_Delete(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -531,5 +556,9 @@ func TestService_Detach(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
