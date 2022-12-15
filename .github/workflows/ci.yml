@@ -31,6 +31,7 @@ jobs:
       - name: Unit tests
         run: |
           docker-compose up -d testdb
+          sleep 10s
           cd backend/internal/service
           go test -v account/*
           go test -v note/*
@@ -41,6 +42,7 @@ jobs:
       - name: Integration tests
         run: |
           docker-compose up -d testdb
+          sleep 10s
           cd backend/internal/service
           go test -v service_integration_test.go
           cd ..
@@ -49,6 +51,7 @@ jobs:
       - name: E2E tests
         run: |
           docker-compose up -d testdb
+          sleep 10s
           cd backend/internal
           go test e2e_test.go
           cd ..
