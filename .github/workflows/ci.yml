@@ -30,7 +30,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          docker-compose up testdb
+          docker-compose up -d testdb
           cd backend
           go test -v ./... -tags=unit
           cd ..
@@ -38,7 +38,7 @@ jobs:
 
       - name: Integration tests
         run: |
-          docker-compose up testdb
+          docker-compose up -d testdb
           cd backend
           go test -v ./... -tags=integration
           cd ..
@@ -46,7 +46,7 @@ jobs:
 
       - name: E2E tests
         run: |
-          docker-compose up testdb
+          docker-compose up -d testdb
           cd backend
           go test -v ./... -tags=e2e
           cd ..
