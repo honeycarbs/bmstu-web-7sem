@@ -13,6 +13,7 @@ import (
 	"neatly/internal/repository/mock"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
+	"neatly/pkg/testutils"
 	"os"
 	"testing"
 )
@@ -65,6 +66,10 @@ func TestService_CreateAccount(t *testing.T) {
 
 			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -128,5 +133,9 @@ func TestService_GenerateJWT(t *testing.T) {
 			assert.Equal(t, testSuite.ExpectedError, err)
 			assert.Equal(t, testSuite.ExpectedTokenVal, token)
 		})
+	}
+	err = testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

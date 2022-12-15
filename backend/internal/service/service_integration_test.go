@@ -1,11 +1,8 @@
-//go:build integration
-// +build integration
-
 package service_test
 
 import (
-	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"neatly/internal/model"
 	"neatly/internal/model/mother"
@@ -13,44 +10,38 @@ import (
 	"neatly/internal/service/account"
 	"neatly/internal/service/note"
 	"neatly/internal/service/tag"
+	"neatly/pkg/dbclient"
 	"neatly/pkg/e"
 	"neatly/pkg/logging"
-	"neatly/pkg/testdocker"
+	"neatly/pkg/testutils"
 	"os"
 	"testing"
 )
 
-func prepareAccountRepo(action string, repo repository.AccountRepository) error {
-	switch action {
-	case "INSERT":
-		{
-			a := mother.AccountMother()
-			return repo.CreateAccount(&a)
+var (
+	testAccount = mother.AccountMother()
+	testNote    = mother.NoteMother()
+	accountQu   = fmt.Sprintf(testutils.NewAccountQuery, testAccount.Name, testAccount.Username, testAccount.Email, testAccount.PasswordHash)
+)
+
+func prepareAccountRepo(actions []string, client *dbclient.Client) error {
+	for _, a := range actions {
+		_, err := client.DB.Exec(a)
+		if err != nil {
+			return err
 		}
-	default:
-		return nil
 	}
+	return nil
 }
 
-func prepareNoteRepo(action string, userID int, repo repository.NoteRepository) error {
-	switch action {
-	case "INSERT":
-		{
-			n := mother.NoteMother()
-			return repo.Create(userID, &n)
+func CreateNotes(amount int, userID int, repo repository.NoteRepository) error {
+	for i := 0; i < amount; i++ {
+		err := repo.Create(userID, &testNote)
+		if err != nil {
+			return err
 		}
-	case "INSERT x2":
-		{
-			n := mother.NoteMother()
-			err := repo.Create(userID, &n)
-			if err != nil {
-				return err
-			}
-			return repo.Create(userID, &n)
-		}
-	default:
-		return nil
 	}
+	return nil
 }
 
 func prepareTagRepo(action string, userID, noteID int, repo repository.TagRepository) error {
@@ -86,25 +77,25 @@ func prepareTagRepo(action string, userID, noteID int, repo repository.TagReposi
 
 func TestIntegration_AccountCreate(t *testing.T) {
 	testSuites := []struct {
-		testName      string
-		inAccount     model.Account
-		outAccount    model.Account
-		prepareAction string
-		ExpectedError error
+		testName       string
+		inAccount      model.Account
+		outAccount     model.Account
+		prepareActions []string
+		ExpectedError  error
 	}{
 		{
-			testName:      "ValidAccountRegistration",
-			inAccount:     mother.AccountMother(),
-			outAccount:    mother.AccountMother(),
-			prepareAction: "DO NOTHING",
-			ExpectedError: nil,
+			testName:       "ValidAccountRegistration",
+			inAccount:      mother.AccountMother(),
+			outAccount:     mother.AccountMother(),
+			prepareActions: []string{},
+			ExpectedError:  nil,
 		},
 		{
-			testName:      "UserAlreadyExists",
-			inAccount:     mother.AccountMother(),
-			outAccount:    mother.AccountMother(),
-			prepareAction: "INSERT",
-			ExpectedError: e.ClientAccountError,
+			testName:       "UserAlreadyExists",
+			inAccount:      mother.AccountMother(),
+			outAccount:     mother.AccountMother(),
+			prepareActions: []string{accountQu},
+			ExpectedError:  e.ClientAccountError,
 		},
 	}
 
@@ -114,13 +105,13 @@ func TestIntegration_AccountCreate(t *testing.T) {
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
 
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			repo := repository.NewAccountRepositoryImpl(client, logger)
-			err = prepareAccountRepo(testSuite.prepareAction, repo)
+			err = prepareAccountRepo(testSuite.prepareActions, client)
 			if err != nil {
 				t.Fatalf("Can't do pre-test action: %s", err)
 			}
@@ -130,7 +121,16 @@ func TestIntegration_AccountCreate(t *testing.T) {
 			err = service.CreateAccount(&testSuite.inAccount)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -144,25 +144,25 @@ func TestIntegration_GenerateJWT(t *testing.T) {
 	testAccountInvalidPassword.Password = "kto prochital tot loh"
 
 	testSuites := []struct {
-		testName      string
-		inAccount     model.Account
-		outAccount    model.Account
-		prepareAction string
-		ExpectedError error
+		testName       string
+		inAccount      model.Account
+		outAccount     model.Account
+		prepareActions []string
+		ExpectedError  error
 	}{
 		{
-			testName:      "AuthorizeSuccessful",
-			inAccount:     testAccount,
-			outAccount:    testAccount,
-			prepareAction: "INSERT",
-			ExpectedError: nil,
+			testName:       "AuthorizeSuccessful",
+			inAccount:      testAccount,
+			outAccount:     testAccount,
+			prepareActions: []string{accountQu},
+			ExpectedError:  nil,
 		},
 		{
-			testName:      "PasswordDoesNotMatch",
-			inAccount:     testAccountInvalidPassword,
-			outAccount:    testAccount,
-			prepareAction: "INSERT",
-			ExpectedError: errors.New("password does not match"),
+			testName:       "PasswordDoesNotMatch",
+			inAccount:      testAccountInvalidPassword,
+			outAccount:     testAccount,
+			prepareActions: []string{accountQu},
+			ExpectedError:  errors.New("password does not match"),
 		},
 	}
 
@@ -173,13 +173,13 @@ func TestIntegration_GenerateJWT(t *testing.T) {
 				t.Fatalf("Can't set config path: %s", err)
 			}
 
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			repo := repository.NewAccountRepositoryImpl(client, logger)
-			err = prepareAccountRepo(testSuite.prepareAction, repo)
+			err = prepareAccountRepo(testSuite.prepareActions, client)
 			if err != nil {
 				t.Fatalf("Can't do pre-test action: %s", err)
 			}
@@ -190,57 +190,16 @@ func TestIntegration_GenerateJWT(t *testing.T) {
 			logger.Info(token)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
-		})
-	}
-}
 
-func TestIntegration_AccountGetOne(t *testing.T) {
-	testAccount := mother.AccountMother()
-
-	testSuites := []struct {
-		testName      string
-		inID          int
-		prepareAction string
-		outAccount    model.Account
-		ExpectedError error
-	}{
-		{
-			testName:      "AccountFound",
-			inID:          1,
-			outAccount:    testAccount,
-			prepareAction: "INSERT",
-			ExpectedError: nil,
-		},
-		{
-			testName:      "AccountNotFound",
-			inID:          0,
-			outAccount:    testAccount,
-			ExpectedError: sql.ErrNoRows,
-		},
-	}
-
-	logging.Init()
-	logger := logging.GetLogger()
-
-	for _, testSuite := range testSuites {
-		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			err = testutils.Cleanup(client, "../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			repo := repository.NewAccountRepositoryImpl(client, logger)
-			err = prepareAccountRepo(testSuite.prepareAction, repo)
-			if err != nil {
-				t.Fatalf("Can't do pre-test action: %s", err)
-			}
-
-			service := account.NewService(repo, logger)
-
-			_, err = service.GetOne(testSuite.inID)
-
-			assert.Equal(t, testSuite.ExpectedError, err)
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -271,16 +230,16 @@ func TestIntegration_NoteCreate(t *testing.T) {
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo("INSERT", ar)
+			err = prepareAccountRepo([]string{accountQu}, client)
 			if err != nil {
 				t.Fatalf("Can't do pre-test action: %s", err)
 			}
@@ -288,11 +247,18 @@ func TestIntegration_NoteCreate(t *testing.T) {
 			service := note.NewService(nr, tr, logger)
 
 			err = service.Create(testSuite.inID, &testNote)
-			//
-			//if testSuite
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -303,59 +269,59 @@ func TestNoteGetAll(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		inNote               model.Note
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inID                 int
-		ExpectedError        error
+		testName              string
+		inNote                model.Note
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inID                  int
+		ExpectedError         error
 	}{
 		{
-			testName:             "UserHasNoNotes",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "UserHasNoNotes",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "UserHasNoteWithoutTags",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "UserHasNoteWithoutTags",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "UserHasNoteWithTags",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			ExpectedError:        nil,
+			testName:              "UserHasNoteWithTags",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			ExpectedError:         nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, 1, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, 1, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -370,7 +336,16 @@ func TestNoteGetAll(t *testing.T) {
 			_, err = service.GetAll(testSuite.inID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -381,50 +356,50 @@ func TestIntegration_NoteGetOne(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		inNote               model.Note
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inID                 int
-		ExpectedError        error
+		testName              string
+		inNote                model.Note
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inID                  int
+		ExpectedError         error
 	}{
 		{
-			testName:             "NoteFound",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "NoteFound",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteDoesNotExists",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        e.ClientNoteError,
+			testName:              "NoteDoesNotExists",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         e.ClientNoteError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, 1, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, 1, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -439,7 +414,16 @@ func TestIntegration_NoteGetOne(t *testing.T) {
 			_, err = service.GetOne(testSuite.inID, 1)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -450,50 +434,50 @@ func TestIntegration_NoteFindByTag(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		inNote               model.Note
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inID                 int
-		ExpectedError        error
+		testName              string
+		inNote                model.Note
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inID                  int
+		ExpectedError         error
 	}{
 		{
-			testName:             "NoteFound",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "NoteFound",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteDoesNotExists",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "NoteDoesNotExists",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, 1, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, 1, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -508,7 +492,16 @@ func TestIntegration_NoteFindByTag(t *testing.T) {
 			_, err = service.FindByTags(1, []string{"test"})
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -519,50 +512,50 @@ func TestIntegration_NoteUpdate(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		inNote               model.Note
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inID                 int
-		ExpectedError        error
+		testName              string
+		inNote                model.Note
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inID                  int
+		ExpectedError         error
 	}{
 		{
-			testName:             "NoteFound",
-			inNote:               testNote,
-			inID:                 1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        nil,
+			testName:              "NoteFound",
+			inNote:                testNote,
+			inID:                  1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteDoesNotExists",
-			inNote:               testNote,
-			inID:                 0,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			ExpectedError:        e.ClientNoteError,
+			testName:              "NoteDoesNotExists",
+			inNote:                testNote,
+			inID:                  0,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			ExpectedError:         e.ClientNoteError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, 1, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, 1, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -580,7 +573,16 @@ func TestIntegration_NoteUpdate(t *testing.T) {
 			err = service.Update(1, un, false)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -592,63 +594,63 @@ func TestIntegration_TagCreate(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inNoteID             int
-		inTag                model.Tag
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inNoteID              int
+		inTag                 model.Tag
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagAssigned",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagAssigned",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagAlreadyAssigned",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagAlreadyAssigned",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteDoesNotExist",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "DO NOTHING",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        e.ClientNoteError,
+			testName:              "NoteDoesNotExist",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         e.ClientNoteError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -663,7 +665,16 @@ func TestIntegration_TagCreate(t *testing.T) {
 			_, err = service.Create(testSuite.inUserID, testSuite.inNoteID, &testSuite.inTag)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -675,63 +686,63 @@ func TestIntegration_TagGetAll(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inNoteID             int
-		inTag                model.Tag
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inNoteID              int
+		inTag                 model.Tag
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagsFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagsFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagsNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagsNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoNotesFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "NoNotesFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -746,7 +757,16 @@ func TestIntegration_TagGetAll(t *testing.T) {
 			_, err = service.GetAll(testSuite.inUserID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -758,63 +778,63 @@ func TestIntegration_TagGetAllByNote(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inNoteID             int
-		inTag                model.Tag
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inNoteID              int
+		inTag                 model.Tag
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagsFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagsFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagsNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagsNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "DO NOTHING",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        e.ClientNoteError,
+			testName:              "NoteNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  0,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         e.ClientNoteError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -829,7 +849,16 @@ func TestIntegration_TagGetAllByNote(t *testing.T) {
 			_, err = service.GetAllByNote(testSuite.inUserID, testSuite.inNoteID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -841,56 +870,56 @@ func TestIntegration_TagGetOne(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inNoteID             int
-		inTagID              int
-		inTag                model.Tag
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inNoteID              int
+		inTagID               int
+		inTag                 model.Tag
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagFound",
-			inUserID:             1,
-			inNoteID:             1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagFound",
+			inUserID:              1,
+			inNoteID:              1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        e.ClientTagError,
+			testName:              "TagNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         e.ClientTagError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -905,7 +934,16 @@ func TestIntegration_TagGetOne(t *testing.T) {
 			_, err = service.GetOne(testSuite.inUserID, testSuite.inTagID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -920,56 +958,56 @@ func TestIntegration_TagUpdate(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inNoteID             int
-		inTagID              int
-		inTag                model.Tag
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inNoteID              int
+		inTagID               int
+		inTag                 model.Tag
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagFound",
-			inUserID:             1,
-			inNoteID:             1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			inTag:                testTag,
-			ExpectedError:        nil,
+			testName:              "TagFound",
+			inUserID:              1,
+			inNoteID:              1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			inTag:                 testTag,
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "DO NOTHING",
-			inTag:                testTag,
-			ExpectedError:        e.ClientTagError,
+			testName:              "TagNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "DO NOTHING",
+			inTag:                 testTag,
+			ExpectedError:         e.ClientTagError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
+
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -984,7 +1022,16 @@ func TestIntegration_TagUpdate(t *testing.T) {
 			err = service.Update(testSuite.inUserID, testSuite.inTagID, newTag)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -999,78 +1046,77 @@ func TestIntegration_TagDetach(t *testing.T) {
 	logger := logging.GetLogger()
 
 	testSuites := []struct {
-		testName             string
-		prepareAccountAction string
-		prepareNoteAction    string
-		prepareTagAction     string
-		inUserID             int
-		inAssignedNoteID     int
-		inNoteID             int
-		inTagID              int
-		ExpectedError        error
+		testName              string
+		prepareAccountActions []string
+		AmountOfNotesCreated  int
+		prepareTagAction      string
+		inUserID              int
+		inAssignedNoteID      int
+		inNoteID              int
+		inTagID               int
+		ExpectedError         error
 	}{
 		{
-			testName:             "TagAttachedToFittingNote",
-			inUserID:             1,
-			inNoteID:             1,
-			inAssignedNoteID:     1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			ExpectedError:        nil,
+			testName:              "TagAttachedToFittingNote",
+			inUserID:              1,
+			inNoteID:              1,
+			inAssignedNoteID:      1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "TagAttachedToNonFittingNote",
-			inUserID:             1,
-			inNoteID:             1,
-			inAssignedNoteID:     2,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT x2",
-			prepareTagAction:     "ASSIGN",
-			ExpectedError:        nil,
+			testName:              "TagAttachedToNonFittingNote",
+			inUserID:              1,
+			inNoteID:              1,
+			inAssignedNoteID:      2,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  2,
+			prepareTagAction:      "ASSIGN",
+			ExpectedError:         nil,
 		},
 		{
-			testName:             "NoteNotFound",
-			inUserID:             1,
-			inNoteID:             0,
-			inAssignedNoteID:     1,
-			inTagID:              1,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			ExpectedError:        e.ClientNoteError,
+			testName:              "NoteNotFound",
+			inUserID:              1,
+			inNoteID:              0,
+			inAssignedNoteID:      1,
+			inTagID:               1,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			ExpectedError:         e.ClientNoteError,
 		},
 		{
-			testName:             "TagNotFound",
-			inUserID:             1,
-			inNoteID:             1,
-			inAssignedNoteID:     1,
-			inTagID:              0,
-			prepareAccountAction: "INSERT",
-			prepareNoteAction:    "INSERT",
-			prepareTagAction:     "ASSIGN",
-			ExpectedError:        e.ClientTagError,
+			testName:              "TagNotFound",
+			inUserID:              1,
+			inNoteID:              1,
+			inAssignedNoteID:      1,
+			inTagID:               0,
+			prepareAccountActions: []string{accountQu},
+			AmountOfNotesCreated:  1,
+			prepareTagAction:      "ASSIGN",
+			ExpectedError:         e.ClientTagError,
 		},
 	}
 	for _, testSuite := range testSuites {
 		t.Run(testSuite.testName, func(t *testing.T) {
-			client, _, _, err := testdocker.GetTestResource("../../etc/migrations")
+			client, err := testutils.Setup("../../etc/migrations")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			nr := repository.NewNoteRepositoryImpl(client, logger)
-			ar := repository.NewAccountRepositoryImpl(client, logger)
 			tr := repository.NewTagRepositoryImpl(client, logger)
 
-			err = prepareAccountRepo(testSuite.prepareAccountAction, ar)
+			err = prepareAccountRepo(testSuite.prepareAccountActions, client)
 			if err != nil {
 				t.Fatalf("Can't do account pre-test action: %s", err)
 			}
 
-			err = prepareNoteRepo(testSuite.prepareNoteAction, testSuite.inUserID, nr)
+			err = CreateNotes(testSuite.AmountOfNotesCreated, testSuite.inUserID, nr)
 			if err != nil {
 				t.Fatalf("Can't do pre-test note action: %s", err)
 			}
@@ -1085,6 +1131,15 @@ func TestIntegration_TagDetach(t *testing.T) {
 			err = service.Detach(testSuite.inUserID, testSuite.inTagID, testSuite.inNoteID)
 
 			assert.Equal(t, testSuite.ExpectedError, err)
+
+			err = testutils.Cleanup(client, "../../etc/migrations")
+			if err != nil {
+				t.Fatal(err)
+			}
 		})
+	}
+	err := testutils.CleanupLogs()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
