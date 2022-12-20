@@ -6,12 +6,12 @@ import (
 )
 
 type Account struct {
-	ID           int    `json:"-" db:"id" gorm:"column:id"`
-	Name         string `json:"name" binding:"required" gorm:"column:name"`
-	Username     string `json:"username" binding:"required" gorm:"column:username"`
-	Email        string `json:"email" binding:"required" gorm:"column:email"`
+	ID           int    `json:"-" db:"id" gorm:"column:id" dbq:"id"`
+	Name         string `json:"name" binding:"required" gorm:"column:name" dbq:"name"`
+	Username     string `json:"username" binding:"required" gorm:"column:username" dbq:"username"`
+	Email        string `json:"email" binding:"required" gorm:"column:email" dbq:"email"`
 	Password     string `json:"-"`
-	PasswordHash string `json:"password" binding:"required" db:"password_hash" gorm:"column:password_hash"`
+	PasswordHash string `json:"password" binding:"required" db:"password_hash" gorm:"column:password_hash" dbq:"password_hash"`
 }
 
 // Recommended by dbq
