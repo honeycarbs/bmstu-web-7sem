@@ -13,7 +13,3 @@ Use-case диаграмма системы:
 ![uc](meta/neatly(uc).png)
 ER-диаграмма сущностей системы:
 ![er](meta/neatly(er).png)
-
----
-### Макетирование
-[макет Figma](https://www.figma.com/file/ugmXv9xuNnLZXulQg2kEH9/neat.ly)
