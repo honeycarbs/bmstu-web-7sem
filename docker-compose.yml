@@ -4,7 +4,9 @@ services:
   testdb:
     image: postgres:alpine
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    expose:
+      - "5433"
     environment:
       - POSTGRES_USER=testdb
       - POSTGRES_PASSWORD=testdb
@@ -12,27 +14,27 @@ services:
       - POSTGRES_DB=testdb
 
   neatly-postgres:
-     image: postgres:alpine
-     ports:
-       - "5432:5432"
-     environment:
-       - POSTGRES_USER=neatly
-       - POSTGRES_PASSWORD=neatly
-       - PGDATA=/pgdata
-       - POSTGRES_DB=neatly
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=neatly
+      - POSTGRES_PASSWORD=neatly
+      - PGDATA=/pgdata
+      - POSTGRES_DB=neatly
 
   backend1:
-   build:
-     context: ./backend
-   env_file:
-     - backend.env
-   command: ./wait-for-postgres.sh neatly-postgres ./app
-   container_name: backend1
-   restart: on-failure
-   ports:
-     - "8081:8080"
-   depends_on:
-     - neatly-postgres
+    build:
+      context: ./backend
+    env_file:
+      - backend.env
+    command: ./wait-for-postgres.sh neatly-postgres ./app
+    container_name: backend1
+    restart: on-failure
+    ports:
+      - "8081:8080"
+    depends_on:
+      - neatly-postgres
 
   backend2:
     build:
@@ -90,7 +92,6 @@ services:
       - "pgadmin:pgadmin"
       - "backend_mirror:backend_mirror"
 
-
   pgadmin:
     image: 'dpage/pgadmin4'
     environment:
@@ -99,16 +100,3 @@ services:
       - traefik.frontend.pgadmin4.rule=Host(`host.example.com`) && PathPrefix(`/pgadmin4`)
     ports:
       - "8090:80"
-
-
-#  frontend:
-#    build:
-#      context: ./frontend
-#      dockerfile: Dockerfile
-#    container_name: neatly-frontend
-#    command: npm run dev
-#    volumes:
-#      - ./frontend:/app
-#      - /app/node_modules
-#    ports:
-#      - "3000:3000"

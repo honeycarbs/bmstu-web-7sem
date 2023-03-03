@@ -54,6 +54,6 @@ jobs:
           docker-compose up -d testdb
           sleep 10s
           cd backend/internal
-          go test e2e_test.go
+          go test -v e2e_test.go
           cd ..
           docker-compose down
