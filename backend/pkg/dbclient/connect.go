@@ -2,11 +2,12 @@ package dbclient
 
 import (
 	"fmt"
+	"neatly/internal/session"
+	"neatly/pkg/logging"
+
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"neatly/internal/session"
-	"neatly/pkg/logging"
 )
 
 type Client struct {
